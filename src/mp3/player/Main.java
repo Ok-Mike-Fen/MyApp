@@ -213,23 +213,23 @@ public class Main {
 		mnNewMenu_2.add(mntmAbout);
 		
 		JButton btnPlay = new JButton("");
-		btnPlay.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-stop-96.png")));
+		btnPlay.setIcon(new ImageIcon(Main.class.getResource("/Icon/stop.png")));
 		menuBar.add(btnPlay);
 		
 		JButton btnPlay_1 = new JButton("");
-		btnPlay_1.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-play-52.png")));
+		btnPlay_1.setIcon(new ImageIcon(Main.class.getResource("/Icon/play.png")));
 		menuBar.add(btnPlay_1);
 		
 		JButton btnPause = new JButton("");
-		btnPause.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-pause-96.png")));
+		btnPause.setIcon(new ImageIcon(Main.class.getResource("/Icon/pause.png")));
 		menuBar.add(btnPause);
 		
 		JButton btnPrevious = new JButton("");
-		btnPrevious.setIcon(new ImageIcon(Main.class.getResource("/Icon/pre.png")));
+		btnPrevious.setIcon(new ImageIcon(Main.class.getResource("/Icon/prev.png")));
 		menuBar.add(btnPrevious);
 		
 		JButton btnNext = new JButton("");
-		btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-fast-forward-52.png")));
+		btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/next.png")));
 		menuBar.add(btnNext);
 		
 		JButton btnPlaybackRandom = new JButton("Playback / Random");
