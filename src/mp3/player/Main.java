@@ -1,276 +1,311 @@
 package mp3.player;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-
-import javax.swing.JFrame;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JButton;
-import javax.swing.JTabbedPane;
-import java.awt.BorderLayout;
-import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.JScrollPane;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import javax.swing.BoxLayout;
-import java.awt.CardLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.JSlider;
-import javax.swing.border.EmptyBorder;
-import javax.swing.ImageIcon;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class Main {
 
-	private JFrame frame;
-	private JTable table;
+/**
+ * @author ServantOfEvil
+ */
+public class Main implements ActionListener {
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Main window = new Main();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+    private JFrame frame;
+    private JTable table;
 
-	/**
-	 * Create the application.
-	 */
-	public Main() {
-		try {
+    private JMenuItem file_open;
+    private JMenuItem file_addFiles;
+    private JMenuItem file_addFolder;
+    private JMenuItem file_newPlaylist;
+    private JMenuItem file_loadPlaylist;
+    private JMenuItem file_savePlaylist;
+    private JMenuItem file_exit;
+    private JMenuItem file_preferences;
 
-			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 
-				if ("Nimbus".equals(info.getName())) {
-					UIManager.setLookAndFeel(info.getClassName());
-					break;
-				}
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		initialize();
+    private JMenuItem edit_undo;
+    private JMenuItem edit_redo;
+    private JMenuItem edit_clear;
+    private JMenuItem edit_selectAll;
+    private JMenuItem edit_selection;
+    private JMenuItem edit_sort;
+    private JMenuItem edit_search;
+    private JMenuItem edit_rmDeadItems;
+    private JMenuItem edit_rmDuplicates;
 
-	}
+    private JMenuItem view_console;
+    private JMenuItem view_playlistMng;
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initialize() {
-		frame = new JFrame();
-		frame.setBounds(100, 100, 650, 500);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setTitle("Simple MP3 Player");
+    private JMenuItem pb_play;
+    private JMenuItem pb_stop;
+    private JMenuItem pb_pause;
+    private JMenuItem pb_next;
+    private JMenuItem pb_prev;
+    private JMenuItem pb_random;
+    private JCheckBoxMenuItem pb_stopAfterCurrent;
+    private JMenuItem pb_order_default;
+    private JMenuItem pb_order_rpTrack;
+    private JMenuItem pb_order_rpPL;
+    private JMenuItem pb_order_random;
+    private JMenuItem pb_order_shuffleTracks;
+    private JMenuItem pb_order_shuffleFolders;
+    private JMenuItem pb_order_shuffleAlbums;
 
-		JMenuBar menuBar = new JMenuBar();
-		frame.setJMenuBar(menuBar);
+    private JMenuItem help_about;
 
-		JMenu mnFile = new JMenu("File");
-		menuBar.add(mnFile);
+    private JButton btnPlay;
+    private JButton btnPause;
+    private JButton btnStop;
+    private JButton btnPrev;
+    private JButton btnNext;
+    private JButton btnPBRD;
 
-		JMenuItem mntmNewMenuItem = new JMenuItem("Open...");
-		mnFile.add(mntmNewMenuItem);
+    private JSlider sliderVolume;
 
-		// mnFile.add(new JSeparator());
+    /**
+     * Launch the application.
+     */
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    Main window = new Main();
+                    window.frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
-		JMenuItem mntmOpen = new JMenuItem("Add files...");
-		mnFile.add(mntmOpen);
+    /**
+     * Create the application.
+     */
+    public Main() {
+        try {
 
-		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Add folder...");
-		mnFile.add(mntmNewMenuItem_1);
+            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 
-		JMenuItem mntmNewMenuItem_2 = new JMenuItem("New playlist");
-		mnFile.add(mntmNewMenuItem_2);
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        initialize();
+        addControls();
 
-		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Load playlist...");
-		mnFile.add(mntmNewMenuItem_3);
+    }
 
-		mnFile.setBorderPainted(true);
+    private void addControls() {
 
-		JMenuItem mntmSavePlaylist = new JMenuItem("Save playlist...");
-		mnFile.add(mntmSavePlaylist);
+    }
 
-		JMenuItem mntmPreferences = new JMenuItem("Preferences");
-		mnFile.add(mntmPreferences);
+    /**
+     * Initialize the contents of the frame.
+     */
+    private void initialize() {
+        frame = new JFrame();
+        frame.setBounds(100, 100, 900, 500);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setTitle("Simple MP3 Player");
 
-		JMenuItem mntmExit = new JMenuItem("Exit");
-		mnFile.add(mntmExit);
+        JMenuBar menuBar = new JMenuBar();
+        frame.setJMenuBar(menuBar);
 
-		JMenu mnNewMenu = new JMenu("Edit");
-		menuBar.add(mnNewMenu);
+        JMenu mnFile = new JMenu("File");
+        menuBar.add(mnFile);
 
-		JMenuItem mntmUndo = new JMenuItem("Undo");
-		mnNewMenu.add(mntmUndo);
+        file_open = new JMenuItem("Open...");
+        mnFile.add(file_open);
 
-		JMenuItem mntmRedo = new JMenuItem("Redo");
-		mnNewMenu.add(mntmRedo);
+        file_addFiles = new JMenuItem("Add files...");
+        mnFile.add(file_addFiles);
 
-		JMenuItem mntmNewMenuItem_4 = new JMenuItem("Clear");
-		mnNewMenu.add(mntmNewMenuItem_4);
+        file_addFolder = new JMenuItem("Add folder...");
+        mnFile.add(file_addFolder);
 
-		JMenuItem mntmSelectAll = new JMenuItem("Select All");
-		mnNewMenu.add(mntmSelectAll);
+        file_newPlaylist = new JMenuItem("New playlist");
+        mnFile.add(file_newPlaylist);
 
-		JMenuItem mntmSelection = new JMenuItem("Selection");
-		mnNewMenu.add(mntmSelection);
+        file_loadPlaylist = new JMenuItem("Load playlist...");
+        mnFile.add(file_loadPlaylist);
 
-		JMenuItem mntmSort = new JMenuItem("Sort");
-		mnNewMenu.add(mntmSort);
+        file_savePlaylist = new JMenuItem("Save playlist...");
+        mnFile.add(file_savePlaylist);
 
-		JMenuItem mntmSearch = new JMenuItem("Search");
-		mnNewMenu.add(mntmSearch);
+        file_preferences = new JMenuItem("Preferences");
+        mnFile.add(file_preferences);
 
-		JMenuItem mntmNewMenuItem_5 = new JMenuItem("Remove duplicates");
-		mnNewMenu.add(mntmNewMenuItem_5);
+        file_exit = new JMenuItem("Exit");
+        mnFile.add(file_exit);
 
-		JMenuItem mntmRemoveDeadItems = new JMenuItem("Remove dead items");
-		mnNewMenu.add(mntmRemoveDeadItems);
+        JMenu mnNewMenu = new JMenu("Edit");
+        menuBar.add(mnNewMenu);
 
-		JMenu mnView = new JMenu("View");
-		menuBar.add(mnView);
+        edit_undo = new JMenuItem("Undo");
+        mnNewMenu.add(edit_undo);
 
-		JMenuItem mntmConsole = new JMenuItem("Console");
-		mnView.add(mntmConsole);
+        edit_redo = new JMenuItem("Redo");
+        mnNewMenu.add(edit_redo);
 
-		JMenuItem mntmNewMenuItem_6 = new JMenuItem("Playlist Manager");
-		mnView.add(mntmNewMenuItem_6);
+        edit_clear = new JMenuItem("Clear");
+        mnNewMenu.add(edit_clear);
 
-		JMenu mnPlayback = new JMenu("Playback");
-		menuBar.add(mnPlayback);
+        edit_selectAll = new JMenuItem("Select All");
+        mnNewMenu.add(edit_selectAll);
 
-		JMenuItem mntmStop = new JMenuItem("Stop");
-		mnPlayback.add(mntmStop);
+        edit_selection = new JMenuItem("Selection");
+        mnNewMenu.add(edit_selection);
 
-		JMenuItem mntmPause = new JMenuItem("Pause");
-		mnPlayback.add(mntmPause);
+        edit_sort = new JMenuItem("Sort");
+        mnNewMenu.add(edit_sort);
 
-		JMenuItem mntmPlay = new JMenuItem("Play");
-		mnPlayback.add(mntmPlay);
+        edit_search = new JMenuItem("Search");
+        mnNewMenu.add(edit_search);
 
-		JMenuItem mntmPrevious = new JMenuItem("Previous");
-		mnPlayback.add(mntmPrevious);
+        edit_rmDuplicates = new JMenuItem("Remove duplicates");
+        mnNewMenu.add(edit_rmDuplicates);
 
-		JMenuItem mntmNext = new JMenuItem("Next");
-		mnPlayback.add(mntmNext);
+        edit_rmDeadItems = new JMenuItem("Remove dead items");
+        mnNewMenu.add(edit_rmDeadItems);
 
-		JMenuItem mntmRandom = new JMenuItem("Random");
-		mnPlayback.add(mntmRandom);
+        JMenu mnView = new JMenu("View");
+        menuBar.add(mnView);
 
-		JMenu mnOrder = new JMenu("Order");
-		mnPlayback.add(mnOrder);
+        view_console = new JMenuItem("Console");
+        mnView.add(view_console);
 
-		JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("Default");
-		mnOrder.add(rdbtnmntmNewRadioItem);
+        view_playlistMng = new JMenuItem("Playlist Manager");
+        mnView.add(view_playlistMng);
 
-		JRadioButtonMenuItem rdbtnmntmRepeatplaylist = new JRadioButtonMenuItem("Repeat (playlist)");
-		mnOrder.add(rdbtnmntmRepeatplaylist);
+        JMenu mnPlayback = new JMenu("Playback");
+        menuBar.add(mnPlayback);
 
-		JRadioButtonMenuItem rdbtnmntmRepeattrack = new JRadioButtonMenuItem("Repeat (track)");
-		mnOrder.add(rdbtnmntmRepeattrack);
+        pb_stop = new JMenuItem("Stop");
+        mnPlayback.add(pb_stop);
 
-		JRadioButtonMenuItem rdbtnmntmRandom = new JRadioButtonMenuItem("Random");
-		mnOrder.add(rdbtnmntmRandom);
+        pb_pause = new JMenuItem("Pause");
+        mnPlayback.add(pb_pause);
 
-		JRadioButtonMenuItem rdbtnmntmShuffle = new JRadioButtonMenuItem("Shuffle (tracks)");
-		mnOrder.add(rdbtnmntmShuffle);
+        pb_play = new JMenuItem("Play");
+        mnPlayback.add(pb_play);
 
-		JRadioButtonMenuItem rdbtnmntmShufflealbums = new JRadioButtonMenuItem("Shuffle (albums)");
-		mnOrder.add(rdbtnmntmShufflealbums);
+        pb_prev = new JMenuItem("Previous");
+        mnPlayback.add(pb_prev);
 
-		JRadioButtonMenuItem rdbtnmntmShufflefolders = new JRadioButtonMenuItem("Shuffle (folders)");
-		mnOrder.add(rdbtnmntmShufflefolders);
+        pb_next = new JMenuItem("Next");
+        mnPlayback.add(pb_next);
 
-		JCheckBoxMenuItem chckbxmntmStopAfter = new JCheckBoxMenuItem(" Stop after current");
-		mnPlayback.add(chckbxmntmStopAfter);
+        pb_random = new JMenuItem("Random");
+        mnPlayback.add(pb_random);
 
-		JMenu mnNewMenu_1 = new JMenu("Library");
-		menuBar.add(mnNewMenu_1);
+        JMenu mnOrder = new JMenu("Order");
+        mnPlayback.add(mnOrder);
 
-		JMenu mnNewMenu_2 = new JMenu("Help");
-		menuBar.add(mnNewMenu_2);
+        pb_order_default = new JRadioButtonMenuItem("Default");
+        mnOrder.add(pb_order_default);
 
-		JMenuItem mntmAbout = new JMenuItem("About");
-		mnNewMenu_2.add(mntmAbout);
-		
-		JButton btnPlay = new JButton("");
-		btnPlay.setIcon(new ImageIcon(Main.class.getResource("/Icon/stop.png")));
-		menuBar.add(btnPlay);
-		
-		JButton btnPlay_1 = new JButton("");
-		btnPlay_1.setIcon(new ImageIcon(Main.class.getResource("/Icon/play.png")));
-		menuBar.add(btnPlay_1);
-		
-		JButton btnPause = new JButton("");
-		btnPause.setIcon(new ImageIcon(Main.class.getResource("/Icon/pause.png")));
-		menuBar.add(btnPause);
-		
-		JButton btnPrevious = new JButton("");
-		btnPrevious.setIcon(new ImageIcon(Main.class.getResource("/Icon/prev.png")));
-		menuBar.add(btnPrevious);
-		
-		JButton btnNext = new JButton("");
-		btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/next.png")));
-		menuBar.add(btnNext);
-		
-		JButton btnPlaybackRandom = new JButton("Playback / Random");
-		menuBar.add(btnPlaybackRandom);
-		
-		JSlider slider = new JSlider();
-		slider.setSize(5, 5);
-		slider.setBorder(null);
-		menuBar.add(slider);
-		
-		JMenuBar menuBar_1 = new JMenuBar();
-		menuBar.add(menuBar_1);
-		
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
-		
-		JPanel panel = new JPanel();
-		tabbedPane.addTab("Default", null, panel, null);
-		panel.setLayout(new CardLayout(0, 0));
-		
-		JScrollPane scrollPane = new JScrollPane();
-		
-		table = new JTable();
-		scrollPane.setViewportView(table);
-		table.setBorder(new LineBorder(new Color(0, 0, 0)));
-		table.setBackground(Color.WHITE);
-		table.setModel(new DefaultTableModel(
-			new Object[][] {
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-			},
-			new String[] {
-				"Playing", "Artist/album", "Track no", "Title/track artist", "Duration", ""
-			}
-		));
-		panel.add(scrollPane, "name_5800961137758");
-		table.getColumnModel().getColumn(0).setPreferredWidth(162);
-		table.getColumnModel().getColumn(3).setPreferredWidth(204);
+        pb_order_rpPL = new JRadioButtonMenuItem("Repeat (playlist)");
+        mnOrder.add(pb_order_rpPL);
 
-	}
+        pb_order_rpTrack = new JRadioButtonMenuItem("Repeat (track)");
+        mnOrder.add(pb_order_rpTrack);
+
+        pb_order_random = new JRadioButtonMenuItem("Random");
+        mnOrder.add(pb_order_random);
+
+        pb_order_shuffleTracks = new JRadioButtonMenuItem("Shuffle (tracks)");
+        mnOrder.add(pb_order_shuffleTracks);
+
+        pb_order_shuffleAlbums = new JRadioButtonMenuItem("Shuffle (albums)");
+        mnOrder.add(pb_order_shuffleAlbums);
+
+        pb_order_shuffleFolders = new JRadioButtonMenuItem("Shuffle (folders)");
+        mnOrder.add(pb_order_shuffleFolders);
+
+        pb_stopAfterCurrent = new JCheckBoxMenuItem(" Stop after current");
+        mnPlayback.add(pb_stopAfterCurrent);
+
+        JMenu mnNewMenu_1 = new JMenu("Library");
+        menuBar.add(mnNewMenu_1);
+
+        JMenu mnNewMenu_2 = new JMenu("Help");
+        menuBar.add(mnNewMenu_2);
+
+        help_about = new JMenuItem("About");
+        mnNewMenu_2.add(help_about);
+
+        btnStop = new JButton("");
+        btnStop.setIcon(new ImageIcon(Main.class.getResource("/Icon/stop.png")));
+        menuBar.add(btnStop);
+
+        btnPlay = new JButton("");
+        btnPlay.setIcon(new ImageIcon(Main.class.getResource("/Icon/play.png")));
+        menuBar.add(btnPlay);
+
+        btnPause = new JButton("");
+        btnPause.setIcon(new ImageIcon(Main.class.getResource("/Icon/pause.png")));
+        menuBar.add(btnPause);
+
+        btnPrev = new JButton("");
+        btnPrev.setIcon(new ImageIcon(Main.class.getResource("/Icon/prev.png")));
+        menuBar.add(btnPrev);
+
+        btnNext = new JButton("");
+        btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/next.png")));
+        menuBar.add(btnNext);
+
+        btnPBRD = new JButton("Playback / Random");
+        menuBar.add(btnPBRD);
+
+        sliderVolume = new JSlider();
+        sliderVolume.setSize(5, 5);
+        sliderVolume.setBorder(null);
+        menuBar.add(sliderVolume);
+
+
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+
+        JPanel panelDefault = new JPanel();
+        tabbedPane.addTab("Default", null, panelDefault, null);
+        panelDefault.setLayout(new CardLayout(0, 0));
+
+        JScrollPane scrollPane = new JScrollPane();
+
+        table = new JTable();
+        scrollPane.setViewportView(table);
+        table.setBorder(new LineBorder(new Color(0, 0, 0)));
+        table.setBackground(Color.WHITE);
+        table.setModel(new DefaultTableModel(
+                new Object[][]{
+                        {null, null, null, null, null, null},
+                        {null, null, null, null, null, null},
+                        {null, null, null, null, null, null},
+                        {null, null, null, null, null, null},
+                },
+                new String[]{
+                        "Playing", "Artist/album", "Track no", "Title/track artist", "Duration", ""
+                }
+        ));
+        panelDefault.add(scrollPane, "name_5800961137758");
+        table.getColumnModel().getColumn(0).setPreferredWidth(162);
+        table.getColumnModel().getColumn(3).setPreferredWidth(204);
+
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
+    }
+
 
 }
