@@ -29,6 +29,7 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JSlider;
 import javax.swing.border.EmptyBorder;
+import javax.swing.ImageIcon;
 
 public class Main {
 
@@ -211,19 +212,24 @@ public class Main {
 		JMenuItem mntmAbout = new JMenuItem("About");
 		mnNewMenu_2.add(mntmAbout);
 		
-		JButton btnPlay = new JButton("Stop");
+		JButton btnPlay = new JButton("");
+		btnPlay.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-stop-96.png")));
 		menuBar.add(btnPlay);
 		
-		JButton btnPlay_1 = new JButton("Play");
+		JButton btnPlay_1 = new JButton("");
+		btnPlay_1.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-play-52.png")));
 		menuBar.add(btnPlay_1);
 		
-		JButton btnPause = new JButton("Pause");
+		JButton btnPause = new JButton("");
+		btnPause.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-pause-96.png")));
 		menuBar.add(btnPause);
 		
-		JButton btnPrevious = new JButton("Previous");
+		JButton btnPrevious = new JButton("");
+		btnPrevious.setIcon(new ImageIcon(Main.class.getResource("/Icon/pre.png")));
 		menuBar.add(btnPrevious);
 		
-		JButton btnNext = new JButton("Next");
+		JButton btnNext = new JButton("");
+		btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/icons8-fast-forward-52.png")));
 		menuBar.add(btnNext);
 		
 		JButton btnPlaybackRandom = new JButton("Playback / Random");
