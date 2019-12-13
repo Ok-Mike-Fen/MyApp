@@ -3,6 +3,7 @@ package mp3.player;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -66,6 +67,8 @@ public class Main implements ActionListener {
 
     private JSlider sliderVolume;
 
+    private DefaultTableModel tableModel;
+
     /**
      * Launch the application.
      */
@@ -125,6 +128,7 @@ public class Main implements ActionListener {
 
         file_open = new JMenuItem("Open...");
         mnFile.add(file_open);
+        file_open.addActionListener(this);
 
         file_addFiles = new JMenuItem("Add files...");
         mnFile.add(file_addFiles);
@@ -146,6 +150,7 @@ public class Main implements ActionListener {
 
         file_exit = new JMenuItem("Exit");
         mnFile.add(file_exit);
+        file_exit.addActionListener(this);
 
         JMenu mnNewMenu = new JMenu("Edit");
         menuBar.add(mnNewMenu);
@@ -285,12 +290,8 @@ public class Main implements ActionListener {
         scrollPane.setViewportView(table);
         table.setBorder(new LineBorder(new Color(0, 0, 0)));
         table.setBackground(Color.WHITE);
-        table.setModel(new DefaultTableModel(
+        table.setModel(tableModel = new DefaultTableModel(
                 new Object[][]{
-                        {null, null, null, null, null, null},
-                        {null, null, null, null, null, null},
-                        {null, null, null, null, null, null},
-                        {null, null, null, null, null, null},
                 },
                 new String[]{
                         "Playing", "Artist/album", "Track no", "Title/track artist", "Duration", ""
@@ -299,11 +300,25 @@ public class Main implements ActionListener {
         panelDefault.add(scrollPane, "name_5800961137758");
         table.getColumnModel().getColumn(0).setPreferredWidth(162);
         table.getColumnModel().getColumn(3).setPreferredWidth(204);
-
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+
+        if (e.getSource() instanceof JMenuItem) {
+            JMenuItem action = (JMenuItem) e.getSource();
+            if (action == file_open) {
+                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    Song song = new Song(fileChooser.getSelectedFile());
+                    tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
+                }
+            } else if (action == file_exit) {
+                System.exit(0);
+            }
+        } else if (e.getSource() instanceof JButton) {
+            JButton action = (JButton) e.getSource();
+        }
 
     }
 
