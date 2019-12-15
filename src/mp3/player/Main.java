@@ -2,12 +2,12 @@ package mp3.player;
 
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.border.LineBorder;
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.Vector;
 
 
 /**
@@ -63,9 +63,12 @@ public class Main implements ActionListener {
     private JButton btnStop;
     private JButton btnPrev;
     private JButton btnNext;
-    private JButton btnPBRD;
+    private JButton btnPlayBackRandom;
 
     private JSlider sliderVolume;
+
+    private Vector<Playlist> playlists;
+    private JTabbedPane tabbedPane;
 
     private DefaultTableModel tableModel;
 
@@ -73,14 +76,12 @@ public class Main implements ActionListener {
      * Launch the application.
      */
     public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    Main window = new Main();
-                    window.frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        EventQueue.invokeLater(() -> {
+            try {
+                Main window = new Main();
+                window.frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
@@ -92,7 +93,6 @@ public class Main implements ActionListener {
         try {
 
             for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-
                 if ("Nimbus".equals(info.getName())) {
                     UIManager.setLookAndFeel(info.getClassName());
                     break;
@@ -103,12 +103,6 @@ public class Main implements ActionListener {
             e.printStackTrace();
         }
         initialize();
-        addControls();
-
-    }
-
-    private void addControls() {
-
     }
 
     /**
@@ -119,6 +113,7 @@ public class Main implements ActionListener {
         frame.setBounds(100, 100, 900, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setTitle("Simple MP3 Player");
+        playlists = new Vector<>();
 
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
@@ -132,12 +127,15 @@ public class Main implements ActionListener {
 
         file_addFiles = new JMenuItem("Add files...");
         mnFile.add(file_addFiles);
+        file_addFiles.addActionListener(this);
 
         file_addFolder = new JMenuItem("Add folder...");
         mnFile.add(file_addFolder);
+        file_addFolder.addActionListener(this);
 
         file_newPlaylist = new JMenuItem("New playlist");
         mnFile.add(file_newPlaylist);
+        file_newPlaylist.addActionListener(this);
 
         file_loadPlaylist = new JMenuItem("Load playlist...");
         mnFile.add(file_loadPlaylist);
@@ -268,59 +266,104 @@ public class Main implements ActionListener {
         btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/next.png")));
         menuBar.add(btnNext);
 
-        btnPBRD = new JButton("Playback / Random");
-        menuBar.add(btnPBRD);
+        btnPlayBackRandom = new JButton("Playback / Random");
+        menuBar.add(btnPlayBackRandom);
 
         sliderVolume = new JSlider();
         sliderVolume.setSize(5, 5);
         sliderVolume.setBorder(null);
         menuBar.add(sliderVolume);
-
-
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        sliderVolume.addChangeListener((e) -> System.out.println(sliderVolume.getValue()));
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        initTabs();
+    }
 
-        JPanel panelDefault = new JPanel();
-        tabbedPane.addTab("Default", null, panelDefault, null);
-        panelDefault.setLayout(new CardLayout(0, 0));
+    private void addTab(String title) {
+        JPanel panel = new JPanel();
+        tabbedPane.addTab(title.trim().equals("") ? "New Playlist " + tabbedPane.getTabCount() : title, null, panel, null);
+        panel.setLayout(new CardLayout(0, 0));
 
         JScrollPane scrollPane = new JScrollPane();
 
         table = new JTable();
+        //table.setEnabled(false);
         scrollPane.setViewportView(table);
-        table.setBorder(new LineBorder(new Color(0, 0, 0)));
-        table.setBackground(Color.WHITE);
-        table.setModel(tableModel = new DefaultTableModel(
+        table.setModel(new DefaultTableModel(
                 new Object[][]{
                 },
                 new String[]{
                         "Playing", "Artist/album", "Track no", "Title/track artist", "Duration", ""
                 }
         ));
-        panelDefault.add(scrollPane, "name_5800961137758");
-        table.getColumnModel().getColumn(0).setPreferredWidth(162);
-        table.getColumnModel().getColumn(3).setPreferredWidth(204);
+        panel.add(scrollPane, 0);
+        table.getColumnModel().getColumn(0).setPreferredWidth(160);
+        table.getColumnModel().getColumn(3).setPreferredWidth(205);
+        playlists.add(new Playlist(table));
+    }
+
+    private void initTabs() {
+        addTab("Default");
+    }
+
+    private void findAndAdd(File file, Playlist playlist) {
+        System.out.println(file.getName());
+        if (!file.isDirectory()) {
+            if (file.getName().endsWith(".mp3")) playlist.getSongs().add(new Song(file));
+        } else {
+            File[] files = file.listFiles();
+            for (File file1 : files) findAndAdd(file1, playlist);
+        }
+    }
+
+    private void updatePlaylist(Playlist playlist) {
+        for (int i = 0; i < playlist.getTable().getRowCount(); i++)
+            ((DefaultTableModel) playlist.getTable().getModel()).removeRow(i);
+        for (int i = 0; i < playlist.getSongs().size(); i++) {
+            Song song = playlist.getSongs().elementAt(i);
+            ((DefaultTableModel) playlist.getTable().getModel()).addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
+        tableModel = (DefaultTableModel) ((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getModel();
+        //get the selected row
+        System.out.println(((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getSelectedRow());
         if (e.getSource() instanceof JMenuItem) {
             JMenuItem action = (JMenuItem) e.getSource();
             if (action == file_open) {
-                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                JFileChooser fileChooser = new JFileChooser("E:/");
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     Song song = new Song(fileChooser.getSelectedFile());
                     tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                 }
+            } else if (action == file_addFiles) {
+                JFileChooser fileChooser = new JFileChooser("E:/");
+                fileChooser.setMultiSelectionEnabled(true);
+                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    File[] files = fileChooser.getSelectedFiles();
+                    for (File file : files) {
+                        Song song = new Song(file);
+                        tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
+                    }
+                }
+            } else if (action == file_addFolder) {
+                JFileChooser fileChooser = new JFileChooser("E:/");
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    findAndAdd(file, playlists.elementAt(tabbedPane.getSelectedIndex()));
+                    updatePlaylist(playlists.elementAt(tabbedPane.getSelectedIndex()));
+                }
+            } else if (action == file_newPlaylist) {
+                addTab(JOptionPane.showInputDialog("Enter the Playlist name:"));
             } else if (action == file_exit) {
                 System.exit(0);
             }
         } else if (e.getSource() instanceof JButton) {
             JButton action = (JButton) e.getSource();
         }
-
     }
-
 
 }
