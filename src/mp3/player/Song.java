@@ -10,16 +10,23 @@ import org.apache.tika.sax.BodyContentHandler;
 import java.io.File;
 import java.io.FileInputStream;
 
+
+/**
+ * @author ServantOfEvil
+ */
 public class Song {
     private boolean isPlaying;
     private String artist_album;
     private String track_no;
     private String title_trackArtist;
     private String duration;
-
+    //private MediaPlayer player;
 
     Song(File file) {
         try {
+           /* new JFXPanel();
+            player = new MediaPlayer(new Media(file.toURI().toString()));
+            player.setAutoPlay(true);*/
             BodyContentHandler handler = new BodyContentHandler();
             Metadata metadata = new Metadata();
             FileInputStream input = new FileInputStream(file);
@@ -49,9 +56,9 @@ public class Song {
     }
 
     private String getDurationInString(double duration) {
-        double d =  duration/60000;
-        int minutes = (int)d;
-        int seconds = (int)((d-minutes)*6000)/100;
+        double d = duration / 60000;
+        int minutes = (int) d;
+        int seconds = (int) ((d - minutes) * 6000) / 100;
         return minutes + ":" + seconds;
     }
 
