@@ -2,6 +2,7 @@ package mp3.player;
 
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -268,11 +269,13 @@ public class Main implements ActionListener {
 
         btnNext = new JButton("");
         btnNext.setIcon(new ImageIcon(Main.class.getResource("/Icon/next.png")));
+        btnNext.addActionListener(this);
         menuBar.add(btnNext);
 
         btnPlayBackRandom = new JButton("Playback / Random");
         btnPlayBackRandom.addActionListener(this);
         menuBar.add(btnPlayBackRandom);
+
 
         sliderVolume = new JSlider();
         sliderVolume.setSize(5, 5);
@@ -338,13 +341,13 @@ public class Main implements ActionListener {
         if (e.getSource() instanceof JMenuItem) {
             JMenuItem action = (JMenuItem) e.getSource();
             if (action == file_open) {
-                JFileChooser fileChooser = new JFileChooser("E:/");
+                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     Song song = new Song(fileChooser.getSelectedFile());
                     tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                 }
             } else if (action == file_addFiles) {
-                JFileChooser fileChooser = new JFileChooser("E:/");
+                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
                 fileChooser.setMultiSelectionEnabled(true);
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     File[] files = fileChooser.getSelectedFiles();
@@ -368,10 +371,21 @@ public class Main implements ActionListener {
             }
         } else if (e.getSource() instanceof JButton) {
             JButton action = (JButton) e.getSource();
-            if(playlists != null){
-                if(action == btnPause){
-                    playlists.get(tableModel.getRowCount());
-                }
+
+            if(action == btnPause){
+             //   ((JTable) ((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getSelectedRow()
+            } else if(action == btnStop){
+
+            } else if(action == btnPlay){
+                //Play = resume
+            } else if(action == btnPause){
+
+            } else if(action == btnPrev){
+
+            } else if(action == btnNext){
+
+            } else if(action == btnPlayBackRandom){
+
             }
         }
     }

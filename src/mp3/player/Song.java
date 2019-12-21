@@ -1,5 +1,11 @@
 package mp3.player;
 
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.metadata.XMPDM;
@@ -21,12 +27,15 @@ public class Song {
     private String title_trackArtist;
     private String duration;
     //private MediaPlayer player;
+    private Control control;
+    private File file;
 
     Song(File file) {
         try {
            /* new JFXPanel();
             player = new MediaPlayer(new Media(file.toURI().toString()));
             player.setAutoPlay(true);*/
+            this.file = file;
             BodyContentHandler handler = new BodyContentHandler();
             Metadata metadata = new Metadata();
             FileInputStream input = new FileInputStream(file);
@@ -79,6 +88,8 @@ public class Song {
         return duration;
     }
 
+    public Control getControl(){return control;}
+
     @Override
     public String toString() {
         return "Song{" +
@@ -89,4 +100,52 @@ public class Song {
                 ", duration='" + duration + '\'' +
                 '}';
     }
+    public void StartPlay(){
+        control = new Control();
+    }
+
+            class Control extends Application{
+
+                private Media media;
+                private MediaPlayer player;
+                private Duration currentTime;
+                private boolean isPlaying;
+
+                @Override
+                public void start(Stage primaryStage) throws Exception {
+                    String path = file.toURI().toString();
+                    media = new Media(path);
+                    player = new MediaPlayer(media);
+                    isPlaying = true;
+                    player.setAutoPlay(true);
+                }
+
+                public void resume(){
+                    if(!isPlaying){
+                        isPlaying = true;
+                        player.setStartTime(currentTime);
+                        player.play();
+                    }
+                }
+
+                public void pause(){
+                    if(isPlaying){
+                        isPlaying = false;
+                        player.pause();
+                        currentTime = player.getCurrentTime();
+                    }
+                }
+
+                public void stop(){
+                    player.stop();
+                    isPlaying = false;
+                    currentTime = player.getCurrentTime();
+                }
+
+                public Duration getDuration(){return media.getDuration();}
+
+                public void exit(){
+                    Platform.exit();
+                }
+            }
 }
