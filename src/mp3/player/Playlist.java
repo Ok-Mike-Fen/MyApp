@@ -2,6 +2,7 @@ package mp3.player;
 
 
 import javax.swing.*;
+import java.util.Random;
 import java.util.Vector;
 
 /**
@@ -10,6 +11,9 @@ import java.util.Vector;
 public class Playlist {
     private Vector<Song> songs;
     private JTable table;
+    private Song songIsPlay;
+    private int local = 0;
+
 
 
     Playlist(JTable table){
@@ -27,5 +31,47 @@ public class Playlist {
 
     public JTable getTable(){
         return  table;
+    }
+
+    public Song getSongIsPlay(){return songIsPlay;}
+
+    public void StartPlay(){
+        if(songs!=null) {
+            local = 0;
+            songIsPlay = songs.get(local);
+            songIsPlay.play();
+        } else {
+            System.out.println("Playlist Null");
+        }
+    }
+
+
+    public void Next(){
+            if(local<songs.size()){
+                local++;
+                songIsPlay.stop();
+                songIsPlay = songs.get(local);
+                songIsPlay.play();
+            }
+    }
+
+    public void Prev(){
+        if(local>0){
+            local--;
+            songIsPlay.stop();
+            songIsPlay = songs.get(local);
+            songIsPlay.play();
+        }
+    }
+
+    public void Random(){
+        Random s1 = new Random();
+        local = s1.nextInt(songs.size());
+    }
+
+    public void Play(int local){
+        this.local = local;
+        songIsPlay = songs.get(local);
+        songIsPlay.play();
     }
 }

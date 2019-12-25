@@ -1,5 +1,9 @@
 package mp3.player;
 
+import com.sun.xml.fastinfoset.tools.FI_DOM_Or_XML_DOM_SAX_SAXEvent;
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.Player;
+import javazoom.jl.player.advanced.AdvancedPlayer;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.metadata.XMPDM;
@@ -7,39 +11,46 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp3.Mp3Parser;
 import org.apache.tika.sax.BodyContentHandler;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 
 
 /**
  * @author ServantOfEvil
  */
 public class Song {
-    private boolean isPlaying;
-    private String artist_album;
-    private String track_no;
-    private String title_trackArtist;
-    private String duration;
-    //private MediaPlayer player;
+    private boolean isPlaying = true;
+    private String artist_album = "1";
+    private String track_no = "2";
+    private String title_trackArtist = "3";
+    private String duration = "4";
+    private Player player;
+    private String path;
+    private FileInputStream FIS;
+    private BufferedInputStream BIS;
+    private boolean canResume;
+    private int total = 0;
+    private int stopped = 0;
 
     Song(File file) {
         try {
-           /* new JFXPanel();
-            player = new MediaPlayer(new Media(file.toURI().toString()));
-            player.setAutoPlay(true);*/
-            BodyContentHandler handler = new BodyContentHandler();
-            Metadata metadata = new Metadata();
-            FileInputStream input = new FileInputStream(file);
-            ParseContext pContext = new ParseContext();
+            System.out.println(file.toURI().toString());
 
-            Mp3Parser parser = new Mp3Parser();
-            parser.parse(input, handler, metadata, pContext);
+           // BodyContentHandler handler = new BodyContentHandler();
+          //  Metadata metadata = new Metadata();
 
-            artist_album = metadata.get(XMPDM.ALBUM_ARTIST).concat(" - ").concat(metadata.get(XMPDM.ALBUM));
+            //FileInputStream input = new FileInputStream(file);
+            this.path = file.getAbsolutePath();
+           // ParseContext pContext = new ParseContext();
+
+          //  Mp3Parser parser = new Mp3Parser();
+
+          //  parser.parse(input, handler, metadata, pContext);
+
+          /*  artist_album = metadata.get(XMPDM.ALBUM_ARTIST).concat(" - ").concat(metadata.get(XMPDM.ALBUM));
             track_no = twoDigitsForm(metadata.get(XMPDM.TRACK_NUMBER));
             title_trackArtist = metadata.get(TikaCoreProperties.TITLE).concat(" - ").concat(metadata.get(XMPDM.ARTIST));
             duration = getDurationInString(Double.parseDouble(metadata.get(XMPDM.DURATION)));
-
+           */
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,6 +90,82 @@ public class Song {
         return duration;
     }
 
+
+
+    public void pause(){
+        if(isPlaying) {
+            try {
+                stopped = FIS.available();
+                player.close();
+                FIS = null;
+                BIS = null;
+                player = null;
+                isPlaying = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            System.out.println("Can't pause");
+        }
+    }
+
+    public void resume(){
+        if(!isPlaying) {
+            try {
+                FIS = new FileInputStream(path);
+                total = FIS.available();
+                FIS.skip(total - stopped);
+                BIS = new BufferedInputStream(FIS);
+                player = new Player(BIS);
+
+            } catch (IOException | JavaLayerException e) {
+                System.out.println("Err");
+            }
+            new Thread(() -> {
+                try {
+                    player.play();
+                } catch (JavaLayerException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            isPlaying = true;
+        }
+    }
+
+
+    public void stop() {
+        if(isPlaying) pause();
+            try {
+                FIS = new FileInputStream(path);
+                stopped = FIS.available();
+            }catch (IOException e){
+                System.out.println("Can't stop");
+            }
+
+    }
+
+
+    public void play(){
+        try{
+            FIS = new FileInputStream(path);
+            BIS = new BufferedInputStream(FIS);
+            player = new Player(BIS);
+            this.total = FIS.available();
+            System.out.println("total "+total);
+        }catch(Exception e){
+            System.out.println("Err-Play-1");
+        }
+        new Thread(() -> {
+            try {
+                player.play();
+            } catch (JavaLayerException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        isPlaying = true;
+    }
+
     @Override
     public String toString() {
         return "Song{" +
@@ -89,4 +176,8 @@ public class Song {
                 ", duration='" + duration + '\'' +
                 '}';
     }
+
+
+
+
 }
