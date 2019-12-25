@@ -4,6 +4,8 @@
     <root id="archive" name="MyApp.jar">
       <element id="module-output" name="MyApp" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../tika-app-1.23.jar" path-in-jar="/" />
+      <element id="library" level="project" name="tika-app-1.23" />
+      <element id="library" level="project" name="jlayer-1.0.1" />
     </root>
   </artifact>
 </component>
