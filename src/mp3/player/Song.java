@@ -19,13 +19,13 @@ import java.io.*;
  */
 public class Song {
     private boolean isPlaying = true;
-    private String artist_album = "1";
-    private String track_no = "2";
-    private String title_trackArtist = "3";
-    private String duration = "4";
+    private String artist_album ;
+    private String track_no ;
+    private String title_trackArtist;
+    private String duration ;
     private Player player;
     private String path;
-    private FileInputStream FIS;
+    private FileInputStream FIS;//đặt tên đi vào lòng người vcl
     private BufferedInputStream BIS;
     private boolean canResume;
     private int total = 0;
@@ -33,24 +33,22 @@ public class Song {
 
     Song(File file) {
         try {
-            System.out.println(file.toURI().toString());
+            //System.out.println(file.toURI().toString());
 
-           // BodyContentHandler handler = new BodyContentHandler();
-          //  Metadata metadata = new Metadata();
+            BodyContentHandler handler = new BodyContentHandler();
+           Metadata metadata = new Metadata();
 
-            //FileInputStream input = new FileInputStream(file);
-            this.path = file.getAbsolutePath();
-           // ParseContext pContext = new ParseContext();
+            FileInputStream input = new FileInputStream(file);
+            this.path = file.getAbsolutePath();ParseContext pContext = new ParseContext();
 
-          //  Mp3Parser parser = new Mp3Parser();
+           Mp3Parser parser = new Mp3Parser();
 
-          //  parser.parse(input, handler, metadata, pContext);
+            parser.parse(input, handler, metadata, pContext);
 
-          /*  artist_album = metadata.get(XMPDM.ALBUM_ARTIST).concat(" - ").concat(metadata.get(XMPDM.ALBUM));
+            artist_album = metadata.get(XMPDM.ALBUM_ARTIST).concat(" - ").concat(metadata.get(XMPDM.ALBUM));
             track_no = twoDigitsForm(metadata.get(XMPDM.TRACK_NUMBER));
             title_trackArtist = metadata.get(TikaCoreProperties.TITLE).concat(" - ").concat(metadata.get(XMPDM.ARTIST));
             duration = getDurationInString(Double.parseDouble(metadata.get(XMPDM.DURATION)));
-           */
         } catch (Exception e) {
             e.printStackTrace();
         }
