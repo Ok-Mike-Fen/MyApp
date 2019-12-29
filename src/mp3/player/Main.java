@@ -344,6 +344,7 @@ public class Main implements ActionListener {
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     Song song = new Song(fileChooser.getSelectedFile());
+                    playlists.elementAt(tabbedPane.getSelectedIndex()).getSongs().add(song);
                     tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                 }
             } else if (action == file_addFiles) {
@@ -376,23 +377,22 @@ public class Main implements ActionListener {
             int local = ((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getSelectedRow();
             isPlay = playlists.elementAt(tabbedPane.getSelectedIndex());
             JButton action = (JButton) e.getSource();
-            if(action == btnPlay){
+            if (action == btnPlay) {
                 isPlay.Play(local);
-            } else if(action == btnNext){
+            } else if (action == btnNext) {
                 isPlay.Next();
-            } else if(action == btnPrev){
+            } else if (action == btnPrev) {
                 isPlay.Prev();
-            } else if(action == btnPlayBackRandom){
+            } else if (action == btnPlayBackRandom) {
                 isPlay.Random();
-            } else if(action == btnPause){
-                if(isPlay.getSongIsPlay().isPlaying()){
+            } else if (action == btnPause) {
+                if (isPlay.getSongIsPlay().isPlaying()) {
                     isPlay.getSongIsPlay().pause();
-                }
-                else {
+                } else {
                     isPlay.getSongIsPlay().resume();
                 }
-            } else if(action == btnStop){
-                if(isPlay.getSongIsPlay().isPlaying()){
+            } else if (action == btnStop) {
+                if (isPlay.getSongIsPlay().isPlaying()) {
                     isPlay.getSongIsPlay().stop();
                 }
             }

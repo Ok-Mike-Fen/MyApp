@@ -47,7 +47,7 @@ public class Playlist {
 
 
     public void Next(){
-            if(local<songs.size()){
+        if (local < songs.size()-1) {
                 local++;
                 songIsPlay.stop();
                 songIsPlay = songs.get(local);
