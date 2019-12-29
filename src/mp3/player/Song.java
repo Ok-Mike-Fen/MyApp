@@ -19,10 +19,10 @@ import java.io.*;
  */
 public class Song {
     private boolean isPlaying = true;
-    private String artist_album ;
-    private String track_no ;
-    private String title_trackArtist;
-    private String duration ;
+    private String artist_album = "";
+    private String track_no = "";
+    private String title_trackArtist = "";
+    private String duration = "00:00";
     private Player player;
     private String path;
     private FileInputStream FIS;//đặt tên đi vào lòng người vcl
@@ -32,25 +32,27 @@ public class Song {
     private int stopped = 0;
 
     Song(File file) {
+        title_trackArtist = file.getName().substring(0,file.getName().lastIndexOf(".")) + " - Unknown";
         try {
             //System.out.println(file.toURI().toString());
 
             BodyContentHandler handler = new BodyContentHandler();
-           Metadata metadata = new Metadata();
+            Metadata metadata = new Metadata();
 
             FileInputStream input = new FileInputStream(file);
-            this.path = file.getAbsolutePath();ParseContext pContext = new ParseContext();
+            this.path = file.getAbsolutePath();
+            ParseContext pContext = new ParseContext();
 
-           Mp3Parser parser = new Mp3Parser();
+            Mp3Parser parser = new Mp3Parser();
 
             parser.parse(input, handler, metadata, pContext);
+            duration = getDurationInString(Double.parseDouble(metadata.get(XMPDM.DURATION)));
 
             artist_album = metadata.get(XMPDM.ALBUM_ARTIST).concat(" - ").concat(metadata.get(XMPDM.ALBUM));
             track_no = twoDigitsForm(metadata.get(XMPDM.TRACK_NUMBER));
             title_trackArtist = metadata.get(TikaCoreProperties.TITLE).concat(" - ").concat(metadata.get(XMPDM.ARTIST));
-            duration = getDurationInString(Double.parseDouble(metadata.get(XMPDM.DURATION)));
         } catch (Exception e) {
-            e.printStackTrace();
+            // ignore the exception
         }
     }
 
@@ -89,9 +91,8 @@ public class Song {
     }
 
 
-
-    public void pause(){
-        if(isPlaying) {
+    public void pause() {
+        if (isPlaying) {
             try {
                 stopped = FIS.available();
                 player.close();
@@ -102,14 +103,13 @@ public class Song {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        else {
+        } else {
             System.out.println("Can't pause");
         }
     }
 
-    public void resume(){
-        if(!isPlaying) {
+    public void resume() {
+        if (!isPlaying) {
             try {
                 FIS = new FileInputStream(path);
                 total = FIS.available();
@@ -133,25 +133,25 @@ public class Song {
 
 
     public void stop() {
-        if(isPlaying) pause();
-            try {
-                FIS = new FileInputStream(path);
-                stopped = FIS.available();
-            }catch (IOException e){
-                System.out.println("Can't stop");
-            }
+        if (isPlaying) pause();
+        try {
+            FIS = new FileInputStream(path);
+            stopped = FIS.available();
+        } catch (IOException e) {
+            System.out.println("Can't stop");
+        }
 
     }
 
 
-    public void play(){
-        try{
+    public void play() {
+        try {
             FIS = new FileInputStream(path);
             BIS = new BufferedInputStream(FIS);
             player = new Player(BIS);
             this.total = FIS.available();
-            System.out.println("total "+total);
-        }catch(Exception e){
+            System.out.println("total " + total);
+        } catch (Exception e) {
             System.out.println("Err-Play-1");
         }
         new Thread(() -> {
@@ -174,8 +174,6 @@ public class Song {
                 ", duration='" + duration + '\'' +
                 '}';
     }
-
-
 
 
 }
