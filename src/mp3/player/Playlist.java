@@ -11,67 +11,61 @@ import java.util.Vector;
 public class Playlist {
     private Vector<Song> songs;
     private JTable table;
-    private Song songIsPlay;
-    private int local = 0;
+    private Song playedSong;
+    private int playedSongIndex = 0;
 
 
-
-    Playlist(JTable table){
+    Playlist(JTable table) {
         songs = new Vector<>();
         this.table = table;
     }
 
-    public void addSongs(Song song){
+    public void addSongs(Song song) {
         songs.add(song);
     }
 
-    public Vector<Song> getSongs(){
+    public Vector<Song> getSongs() {
         return songs;
     }
 
-    public JTable getTable(){
-        return  table;
+    public JTable getTable() {
+        return table;
     }
 
-    public Song getSongIsPlay(){return songIsPlay;}
+    public Song getPlayedSong() {
+        return playedSong;
+    }
 
-    public void StartPlay(){
-        if(songs!=null) {
-            local = 0;
-            songIsPlay = songs.get(local);
-            songIsPlay.play();
-        } else {
-            System.out.println("Playlist Null");
+    public int getPlayedSongIndex(){
+        return playedSongIndex;
+    }
+
+    public void next() {
+        if (playedSongIndex < songs.size() - 1) {
+            playedSongIndex++;
+            play(playedSongIndex);
         }
     }
 
-
-    public void Next(){
-        if (local < songs.size()-1) {
-                local++;
-                songIsPlay.stop();
-                songIsPlay = songs.get(local);
-                songIsPlay.play();
-            }
-    }
-
-    public void Prev(){
-        if(local>0){
-            local--;
-            songIsPlay.stop();
-            songIsPlay = songs.get(local);
-            songIsPlay.play();
+    public void prev() {
+        if (playedSongIndex > 0) {
+            playedSongIndex--;
+           play(playedSongIndex);
         }
     }
 
-    public void Random(){
+    public void randomPlay() {
         Random s1 = new Random();
-        local = s1.nextInt(songs.size());
+        playedSongIndex = s1.nextInt(songs.size());
+        play(playedSongIndex);
     }
 
-    public void Play(int local){
-        this.local = local;
-        songIsPlay = songs.get(local);
-        songIsPlay.play();
+    public void play(int index) {
+        if (index == -1) index = 0;
+        if (playedSong != null) playedSong.stop();
+        if (index < 0 || index >= songs.size()) return;
+        this.playedSongIndex = index;
+        playedSong = songs.elementAt(index);
+        playedSong.play();
     }
 }
