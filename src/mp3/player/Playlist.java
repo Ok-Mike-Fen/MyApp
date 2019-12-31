@@ -36,7 +36,7 @@ public class Playlist {
         return playedSong;
     }
 
-    public int getPlayedSongIndex(){
+    public int getPlayedSongIndex() {
         return playedSongIndex;
     }
 
@@ -50,11 +50,12 @@ public class Playlist {
     public void prev() {
         if (playedSongIndex > 0) {
             playedSongIndex--;
-           play(playedSongIndex);
+            play(playedSongIndex);
         }
     }
 
     public void randomPlay() {
+        if (songs.size() < 1) return;
         Random s1 = new Random();
         playedSongIndex = s1.nextInt(songs.size());
         play(playedSongIndex);
@@ -67,5 +68,9 @@ public class Playlist {
         this.playedSongIndex = index;
         playedSong = songs.elementAt(index);
         playedSong.play();
+    }
+
+    public void setPlayedSong(Song playedSong){
+        this.playedSong = playedSong;
     }
 }

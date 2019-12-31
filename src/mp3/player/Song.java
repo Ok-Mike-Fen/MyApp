@@ -1,6 +1,8 @@
 package mp3.player;
 
 import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.AudioDevice;
+import javazoom.jl.player.FactoryRegistry;
 import javazoom.jl.player.Player;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
@@ -19,17 +21,17 @@ public class Song {
     private boolean isPlaying = false;
     private String artist_album = "";
     private String track_no = "";
-    private String title_trackArtist = "";
+    private String title_trackArtist;
     private String duration = "00:00";
     private Player player;
     private String path;
     private FileInputStream input;
-    private boolean canResume;
     private int totalLength = 0;
     private int lastPosition = 0;
 
     Song(File file) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
+
         try {
             BodyContentHandler handler = new BodyContentHandler();
             Metadata metadata = new Metadata();
@@ -47,9 +49,6 @@ public class Song {
             track_no = twoDigitsForm(metadata.get(XMPDM.TRACK_NUMBER));
             title_trackArtist = metadata.get(TikaCoreProperties.TITLE).concat(" - ").concat(metadata.get(XMPDM.ARTIST));
         } catch (Exception e) {
-            /**
-             * some songs might not contain any info - an exception can be thrown from Tika lib, just ignore it
-             */
         }
     }
 
@@ -88,7 +87,7 @@ public class Song {
     }
 
     public void pause() {
-        if (isPlaying) {
+        if (isPlaying()) {
             try {
                 lastPosition = input.available();
                 player.close();
@@ -96,8 +95,6 @@ public class Song {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-            System.out.println("Can't pause");
         }
     }
 
@@ -126,6 +123,7 @@ public class Song {
     public void stop() {
         if (isPlaying) player.close();
         isPlaying = false;
+        lastPosition = totalLength;
     }
 
 
@@ -157,6 +155,5 @@ public class Song {
                 ", duration='" + duration + '\'' +
                 '}';
     }
-
 
 }

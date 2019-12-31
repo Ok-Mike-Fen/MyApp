@@ -1,5 +1,6 @@
 package mp3.player;
 
+import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.filechooser.FileSystemView;
@@ -65,6 +66,8 @@ public class Main implements ActionListener {
     private JTabbedPane tabbedPane;
 
     private DefaultTableModel tableModel;
+
+    private ImageIcon icnPlay, icnPause;
 
     /**
      * Launch the application.
@@ -252,7 +255,8 @@ public class Main implements ActionListener {
         btnNext.addActionListener(this);
         menuBar.add(btnNext);
 
-        btnPlayBackRandom = new JButton("Playback / Random");
+        btnPlayBackRandom = new JButton("");
+        btnPlayBackRandom.setIcon(new ImageIcon(Main.class.getResource("/Icon/random.png")));
         btnPlayBackRandom.addActionListener(this);
         menuBar.add(btnPlayBackRandom);
 
@@ -260,7 +264,8 @@ public class Main implements ActionListener {
         sliderVolume.setSize(5, 5);
         sliderVolume.setBorder(null);
         menuBar.add(sliderVolume);
-        sliderVolume.addChangeListener((e) -> System.out.println(sliderVolume.getValue()));
+        sliderVolume.addChangeListener((e) -> {
+        });
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
         initTabs();
@@ -286,11 +291,19 @@ public class Main implements ActionListener {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 0) return ImageIcon.class;
+                return super.getColumnClass(columnIndex);
+            }
         });
         panel.add(scrollPane, 0);
         table.getColumnModel().getColumn(0).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(205);
         playlists.add(new Playlist(table));
+        icnPause = new ImageIcon(getClass().getResource("/Icon/pause.png"));
+        icnPlay = new ImageIcon(getClass().getResource("/Icon/play.png"));
     }
 
     private void initTabs() {
@@ -298,7 +311,7 @@ public class Main implements ActionListener {
     }
 
     private void findAndAdd(File file, Playlist playlist) {
-        System.out.println(file.getName());
+//        System.out.println(file.getName());
         if (!file.isDirectory()) {
             if (file.getName().endsWith(".mp3")) playlist.getSongs().add(new Song(file));
         } else {
@@ -322,6 +335,7 @@ public class Main implements ActionListener {
         JTable currentJTable = (JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView();
         tableModel = (DefaultTableModel) currentJTable.getModel();
         Playlist currentPlaylist = playlists.elementAt(tabbedPane.getSelectedIndex());
+        int index = currentJTable.getSelectedRow();
 
         if (e.getSource() instanceof JMenuItem) {
             JMenuItem action = (JMenuItem) e.getSource();
@@ -372,7 +386,7 @@ public class Main implements ActionListener {
             } else if (action == pb_next) {
                 e.setSource(btnNext);
                 actionPerformed(e);
-            }else if(action == pb_random){
+            } else if (action == pb_random) {
                 e.setSource(btnPlayBackRandom);
                 actionPerformed(e);
             } else if (action == help_about) {
@@ -380,7 +394,6 @@ public class Main implements ActionListener {
             }
         } else if (e.getSource() instanceof JButton) {
 
-            int index = currentJTable.getSelectedRow();
             JButton action = (JButton) e.getSource();
 
             if (action == btnPlay) {
@@ -392,18 +405,32 @@ public class Main implements ActionListener {
             } else if (action == btnPlayBackRandom) {
                 currentPlaylist.randomPlay();
             } else if (action == btnPause) {
-                if (currentPlaylist.getPlayedSong().isPlaying()) {
-                    currentPlaylist.getPlayedSong().pause();
-                } else {
-                    currentPlaylist.getPlayedSong().resume();
+                if (currentPlaylist.getPlayedSong() != null) {
+                    if (currentPlaylist.getPlayedSong().isPlaying()) {
+                        currentPlaylist.getPlayedSong().pause();
+                    } else {
+                        currentPlaylist.getPlayedSong().resume();
+                    }
                 }
             } else if (action == btnStop) {
-                if (currentPlaylist.getPlayedSong().isPlaying()) {
-                    currentPlaylist.getPlayedSong().stop();
+                if (currentPlaylist.getPlayedSong() != null) {
+                    if (currentPlaylist.getPlayedSong().isPlaying()) {
+                        currentPlaylist.getPlayedSong().stop();
+                        currentPlaylist.setPlayedSong(null);
+                    }
                 }
             }
         }
+
         currentJTable.getSelectionModel().setSelectionInterval(currentPlaylist.getPlayedSongIndex(), currentPlaylist.getPlayedSongIndex());
+        for (int i = 0; i < tableModel.getRowCount(); i++) tableModel.setValueAt(null, i, 0);
+        if (currentPlaylist.getPlayedSong() != null) {
+            if (currentPlaylist.getPlayedSong().isPlaying())
+                tableModel.setValueAt(icnPlay, currentPlaylist.getPlayedSongIndex(), 0);
+            else tableModel.setValueAt(icnPause, currentPlaylist.getPlayedSongIndex(), 0);
+        } else tableModel.setValueAt(null, currentPlaylist.getPlayedSongIndex(), 0);
+
     }
+
 
 }
