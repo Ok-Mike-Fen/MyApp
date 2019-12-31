@@ -1,9 +1,7 @@
 package mp3.player;
 
-import com.sun.xml.fastinfoset.tools.FI_DOM_Or_XML_DOM_SAX_SAXEvent;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
-import javazoom.jl.player.advanced.AdvancedPlayer;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.metadata.XMPDM;
@@ -18,24 +16,21 @@ import java.io.*;
  * @author ServantOfEvil
  */
 public class Song {
-    private boolean isPlaying = true;
+    private boolean isPlaying = false;
     private String artist_album = "";
     private String track_no = "";
     private String title_trackArtist = "";
     private String duration = "00:00";
     private Player player;
     private String path;
-    private FileInputStream FIS;//đặt tên đi vào lòng người vcl
-    private BufferedInputStream BIS;
+    private FileInputStream input;
     private boolean canResume;
-    private int total = 0;
-    private int stopped = 0;
+    private int totalLength = 0;
+    private int lastPosition = 0;
 
     Song(File file) {
-        title_trackArtist = file.getName().substring(0,file.getName().lastIndexOf(".")) + " - Unknown";
+        title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
         try {
-            //System.out.println(file.toURI().toString());
-
             BodyContentHandler handler = new BodyContentHandler();
             Metadata metadata = new Metadata();
 
@@ -52,7 +47,9 @@ public class Song {
             track_no = twoDigitsForm(metadata.get(XMPDM.TRACK_NUMBER));
             title_trackArtist = metadata.get(TikaCoreProperties.TITLE).concat(" - ").concat(metadata.get(XMPDM.ARTIST));
         } catch (Exception e) {
-            // ignore the exception
+            /**
+             * some songs might not contain any info - an exception can be thrown from Tika lib, just ignore it
+             */
         }
     }
 
@@ -90,15 +87,11 @@ public class Song {
         return duration;
     }
 
-
     public void pause() {
         if (isPlaying) {
             try {
-                stopped = FIS.available();
+                lastPosition = input.available();
                 player.close();
-                FIS = null;
-                BIS = null;
-                player = null;
                 isPlaying = false;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -111,14 +104,12 @@ public class Song {
     public void resume() {
         if (!isPlaying) {
             try {
-                FIS = new FileInputStream(path);
-                total = FIS.available();
-                FIS.skip(total - stopped);
-                BIS = new BufferedInputStream(FIS);
-                player = new Player(BIS);
-
+                input = new FileInputStream(path);
+                totalLength = input.available();
+                input.skip(totalLength - lastPosition);
+                player = new Player(input);
             } catch (IOException | JavaLayerException e) {
-                System.out.println("Err");
+                e.printStackTrace();
             }
             new Thread(() -> {
                 try {
@@ -133,26 +124,18 @@ public class Song {
 
 
     public void stop() {
-        if (isPlaying) pause();
-        try {
-            FIS = new FileInputStream(path);
-            stopped = FIS.available();
-        } catch (IOException e) {
-            System.out.println("Can't stop");
-        }
-
+        if (isPlaying) player.close();
+        isPlaying = false;
     }
 
 
     public void play() {
         try {
-            FIS = new FileInputStream(path);
-            BIS = new BufferedInputStream(FIS);
-            player = new Player(BIS);
-            this.total = FIS.available();
-            System.out.println("total " + total);
+            input = new FileInputStream(path);
+            player = new Player(input);
+            this.totalLength = input.available();
         } catch (Exception e) {
-            System.out.println("Err-Play-1");
+            e.printStackTrace();
         }
         new Thread(() -> {
             try {

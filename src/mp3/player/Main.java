@@ -26,11 +26,7 @@ public class Main implements ActionListener {
     private JMenuItem file_loadPlaylist;
     private JMenuItem file_savePlaylist;
     private JMenuItem file_exit;
-    private JMenuItem file_preferences;
 
-
-    private JMenuItem edit_undo;
-    private JMenuItem edit_redo;
     private JMenuItem edit_clear;
     private JMenuItem edit_selectAll;
     private JMenuItem edit_selection;
@@ -38,9 +34,6 @@ public class Main implements ActionListener {
     private JMenuItem edit_search;
     private JMenuItem edit_rmDeadItems;
     private JMenuItem edit_rmDuplicates;
-
-    private JMenuItem view_console;
-    private JMenuItem view_playlistMng;
 
     private JMenuItem pb_play;
     private JMenuItem pb_stop;
@@ -144,21 +137,12 @@ public class Main implements ActionListener {
         file_savePlaylist = new JMenuItem("Save playlist...");
         mnFile.add(file_savePlaylist);
 
-        file_preferences = new JMenuItem("Preferences");
-        mnFile.add(file_preferences);
-
         file_exit = new JMenuItem("Exit");
         mnFile.add(file_exit);
         file_exit.addActionListener(this);
 
         JMenu mnNewMenu = new JMenu("Edit");
         menuBar.add(mnNewMenu);
-
-        edit_undo = new JMenuItem("Undo");
-        mnNewMenu.add(edit_undo);
-
-        edit_redo = new JMenuItem("Redo");
-        mnNewMenu.add(edit_redo);
 
         edit_clear = new JMenuItem("Clear");
         mnNewMenu.add(edit_clear);
@@ -181,35 +165,33 @@ public class Main implements ActionListener {
         edit_rmDeadItems = new JMenuItem("Remove dead items");
         mnNewMenu.add(edit_rmDeadItems);
 
-        JMenu mnView = new JMenu("View");
-        menuBar.add(mnView);
-
-        view_console = new JMenuItem("Console");
-        mnView.add(view_console);
-
-        view_playlistMng = new JMenuItem("Playlist Manager");
-        mnView.add(view_playlistMng);
 
         JMenu mnPlayback = new JMenu("Playback");
         menuBar.add(mnPlayback);
 
         pb_stop = new JMenuItem("Stop");
         mnPlayback.add(pb_stop);
+        pb_stop.addActionListener(this);
 
         pb_pause = new JMenuItem("Pause");
         mnPlayback.add(pb_pause);
+        pb_pause.addActionListener(this);
 
         pb_play = new JMenuItem("Play");
         mnPlayback.add(pb_play);
+        pb_play.addActionListener(this);
 
         pb_prev = new JMenuItem("Previous");
         mnPlayback.add(pb_prev);
+        pb_prev.addActionListener(this);
 
         pb_next = new JMenuItem("Next");
         mnPlayback.add(pb_next);
+        pb_next.addActionListener(this);
 
         pb_random = new JMenuItem("Random");
         mnPlayback.add(pb_random);
+        pb_random.addActionListener(this);
 
         JMenu mnOrder = new JMenu("Order");
         mnPlayback.add(mnOrder);
@@ -238,14 +220,12 @@ public class Main implements ActionListener {
         pb_stopAfterCurrent = new JCheckBoxMenuItem(" Stop after current");
         mnPlayback.add(pb_stopAfterCurrent);
 
-        JMenu mnNewMenu_1 = new JMenu("Library");
-        menuBar.add(mnNewMenu_1);
-
         JMenu mnNewMenu_2 = new JMenu("Help");
         menuBar.add(mnNewMenu_2);
 
         help_about = new JMenuItem("About");
         mnNewMenu_2.add(help_about);
+        help_about.addActionListener(this);
 
         btnStop = new JButton("");
         btnStop.setIcon(new ImageIcon(Main.class.getResource("/Icon/stop.png")));
@@ -294,7 +274,6 @@ public class Main implements ActionListener {
         JScrollPane scrollPane = new JScrollPane();
 
         table = new JTable();
-        //table.setEnabled(false);
         scrollPane.setViewportView(table);
         table.setModel(new DefaultTableModel(
                 new Object[][]{
@@ -302,7 +281,12 @@ public class Main implements ActionListener {
                 new String[]{
                         "Playing", "Artist/album", "Track no", "Title/track artist", "Duration", ""
                 }
-        ));
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
         panel.add(scrollPane, 0);
         table.getColumnModel().getColumn(0).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(205);
@@ -334,9 +318,11 @@ public class Main implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        tableModel = (DefaultTableModel) ((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getModel();
-        //get the selected row
-        System.out.println(((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getSelectedRow());
+
+        JTable currentJTable = (JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView();
+        tableModel = (DefaultTableModel) currentJTable.getModel();
+        Playlist currentPlaylist = playlists.elementAt(tabbedPane.getSelectedIndex());
+
         if (e.getSource() instanceof JMenuItem) {
             JMenuItem action = (JMenuItem) e.getSource();
             if (action == file_open) {
@@ -344,7 +330,7 @@ public class Main implements ActionListener {
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     Song song = new Song(fileChooser.getSelectedFile());
-                    playlists.elementAt(tabbedPane.getSelectedIndex()).getSongs().add(song);
+                    currentPlaylist.getSongs().add(song);
                     tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                 }
             } else if (action == file_addFiles) {
@@ -355,7 +341,7 @@ public class Main implements ActionListener {
                     File[] files = fileChooser.getSelectedFiles();
                     for (File file : files) {
                         Song song = new Song(file);
-                        playlists.elementAt(tabbedPane.getSelectedIndex()).getSongs().add(song);
+                        currentPlaylist.getSongs().add(song);
                         tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                     }
                 }
@@ -364,39 +350,60 @@ public class Main implements ActionListener {
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
-                    findAndAdd(file, playlists.elementAt(tabbedPane.getSelectedIndex()));
-                    updatePlaylist(playlists.elementAt(tabbedPane.getSelectedIndex()));
+                    findAndAdd(file, currentPlaylist);
+                    updatePlaylist(currentPlaylist);
                 }
             } else if (action == file_newPlaylist) {
                 addTab(JOptionPane.showInputDialog("Enter the Playlist name:"));
             } else if (action == file_exit) {
                 System.exit(0);
+            } else if (action == pb_stop) {
+                e.setSource(btnStop);
+                actionPerformed(e);
+            } else if (action == pb_play) {
+                e.setSource(btnPlay);
+                actionPerformed(e);
+            } else if (action == pb_pause) {
+                e.setSource(btnPause);
+                actionPerformed(e);
+            } else if (action == pb_prev) {
+                e.setSource(btnPrev);
+                actionPerformed(e);
+            } else if (action == pb_next) {
+                e.setSource(btnNext);
+                actionPerformed(e);
+            }else if(action == pb_random){
+                e.setSource(btnPlayBackRandom);
+                actionPerformed(e);
+            } else if (action == help_about) {
+                JOptionPane.showMessageDialog(frame, "---Simple MP3 Player---\n Developed by:\n Đặng Quang Vinh(ServantOfEvil)\n Ngô Quang Vinh\n Nguyễn Công Hậu", "About", JOptionPane.INFORMATION_MESSAGE);
             }
         } else if (e.getSource() instanceof JButton) {
-            Playlist isPlay;
-            int local = ((JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView()).getSelectedRow();
-            isPlay = playlists.elementAt(tabbedPane.getSelectedIndex());
+
+            int index = currentJTable.getSelectedRow();
             JButton action = (JButton) e.getSource();
+
             if (action == btnPlay) {
-                isPlay.Play(local);
+                currentPlaylist.play(index);
             } else if (action == btnNext) {
-                isPlay.Next();
+                currentPlaylist.next();
             } else if (action == btnPrev) {
-                isPlay.Prev();
+                currentPlaylist.prev();
             } else if (action == btnPlayBackRandom) {
-                isPlay.Random();
+                currentPlaylist.randomPlay();
             } else if (action == btnPause) {
-                if (isPlay.getSongIsPlay().isPlaying()) {
-                    isPlay.getSongIsPlay().pause();
+                if (currentPlaylist.getPlayedSong().isPlaying()) {
+                    currentPlaylist.getPlayedSong().pause();
                 } else {
-                    isPlay.getSongIsPlay().resume();
+                    currentPlaylist.getPlayedSong().resume();
                 }
             } else if (action == btnStop) {
-                if (isPlay.getSongIsPlay().isPlaying()) {
-                    isPlay.getSongIsPlay().stop();
+                if (currentPlaylist.getPlayedSong().isPlaying()) {
+                    currentPlaylist.getPlayedSong().stop();
                 }
             }
         }
+        currentJTable.getSelectionModel().setSelectionInterval(currentPlaylist.getPlayedSongIndex(), currentPlaylist.getPlayedSongIndex());
     }
 
 }
