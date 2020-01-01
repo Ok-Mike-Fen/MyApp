@@ -1,5 +1,7 @@
 package mp3.player;
 
+import org.apache.commons.lang3.SerializationUtils;
+
 import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -8,14 +10,14 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.io.*;
 import java.util.Vector;
 
 
 /**
  * @author ServantOfEvil
  */
-public class Main implements ActionListener {
+public class Main implements ActionListener, Serializable {
 
     private JFrame frame;
     private JTable table;
@@ -136,9 +138,11 @@ public class Main implements ActionListener {
 
         file_loadPlaylist = new JMenuItem("Load playlist...");
         mnFile.add(file_loadPlaylist);
+        file_loadPlaylist.addActionListener(this);
 
         file_savePlaylist = new JMenuItem("Save playlist...");
         mnFile.add(file_savePlaylist);
+        file_savePlaylist.addActionListener(this);
 
         file_exit = new JMenuItem("Exit");
         mnFile.add(file_exit);
@@ -262,48 +266,29 @@ public class Main implements ActionListener {
 
         sliderVolume = new JSlider();
         sliderVolume.setSize(5, 5);
-        sliderVolume.setBorder(null);
+        sliderVolume.setEnabled(false);
         menuBar.add(sliderVolume);
-        sliderVolume.addChangeListener((e) -> {
-        });
+
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
         initTabs();
+        icnPause = new ImageIcon(getClass().getResource("/Icon/pause.png"));
+        icnPlay = new ImageIcon(getClass().getResource("/Icon/play.png"));
     }
 
     private void addTab(String title) {
-        JPanel panel = new JPanel();
-        tabbedPane.addTab(title.trim().equals("") ? "New Playlist " + tabbedPane.getTabCount() : title, null, panel, null);
-        panel.setLayout(new CardLayout(0, 0));
+        title = title.trim().equals("") ? "New Playlist " + tabbedPane.getTabCount() : title;
+        Playlist playlist;
+        playlists.add(playlist = new Playlist(title));
+        tabbedPane.addTab(playlist.getName(), null, playlist.getPanel(), null);
+    }
 
-        JScrollPane scrollPane = new JScrollPane();
-
-        table = new JTable();
-        scrollPane.setViewportView(table);
-        table.setModel(new DefaultTableModel(
-                new Object[][]{
-                },
-                new String[]{
-                        "Playing", "Artist/album", "Track no", "Title/track artist", "Duration", ""
-                }
-        ) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-
-            @Override
-            public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 0) return ImageIcon.class;
-                return super.getColumnClass(columnIndex);
-            }
-        });
-        panel.add(scrollPane, 0);
-        table.getColumnModel().getColumn(0).setPreferredWidth(160);
-        table.getColumnModel().getColumn(3).setPreferredWidth(205);
-        playlists.add(new Playlist(table));
-        icnPause = new ImageIcon(getClass().getResource("/Icon/pause.png"));
-        icnPlay = new ImageIcon(getClass().getResource("/Icon/play.png"));
+    private void addTab(Playlist p) {
+        Playlist playlist;
+        playlists.add(playlist = new Playlist(p.getName()));
+        tabbedPane.addTab(playlist.getName(), null, playlist.getPanel(), null);
+        playlist.setSongs(p.getSongs());
+        updatePlaylist(playlist);
     }
 
     private void initTabs() {
@@ -313,7 +298,7 @@ public class Main implements ActionListener {
     private void findAndAdd(File file, Playlist playlist) {
 //        System.out.println(file.getName());
         if (!file.isDirectory()) {
-            if (file.getName().endsWith(".mp3")) playlist.getSongs().add(new Song(file));
+            if (file.getName().endsWith(".mp3")) playlist.add(new Song(file));
         } else {
             File[] files = file.listFiles();
             for (File file1 : files) findAndAdd(file1, playlist);
@@ -323,8 +308,8 @@ public class Main implements ActionListener {
     private void updatePlaylist(Playlist playlist) {
         for (int i = 0; i < playlist.getTable().getRowCount(); i++)
             ((DefaultTableModel) playlist.getTable().getModel()).removeRow(i);
-        for (int i = 0; i < playlist.getSongs().size(); i++) {
-            Song song = playlist.getSongs().elementAt(i);
+        for (int i = 0; i < playlist.getSongCount(); i++) {
+            Song song = playlist.getSongAt(i);
             ((DefaultTableModel) playlist.getTable().getModel()).addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
         }
     }
@@ -342,9 +327,9 @@ public class Main implements ActionListener {
             if (action == file_open) {
                 JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                     Song song = new Song(fileChooser.getSelectedFile());
-                    currentPlaylist.getSongs().add(song);
+                    currentPlaylist.add(song);
                     tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                 }
             } else if (action == file_addFiles) {
@@ -355,7 +340,7 @@ public class Main implements ActionListener {
                     File[] files = fileChooser.getSelectedFiles();
                     for (File file : files) {
                         Song song = new Song(file);
-                        currentPlaylist.getSongs().add(song);
+                        currentPlaylist.add(song);
                         tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
                     }
                 }
@@ -369,6 +354,42 @@ public class Main implements ActionListener {
                 }
             } else if (action == file_newPlaylist) {
                 addTab(JOptionPane.showInputDialog("Enter the Playlist name:"));
+            } else if (action == file_loadPlaylist) {
+                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                fileChooser.setMultiSelectionEnabled(true);
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    if (!file.getName().endsWith(".soe")) return;
+                    try {
+                        FileInputStream fis = new FileInputStream(file);
+                        ObjectInputStream ois = new ObjectInputStream(fis);
+                        Playlist p = (Playlist) ois.readObject();
+                        addTab(p);
+                        ois.close();
+                        fis.close();
+                    } catch (Exception e1) {
+                        JOptionPane.showMessageDialog(null, "Error loading playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } else if (action == file_savePlaylist) {
+                JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                fileChooser.setMultiSelectionEnabled(true);
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                    File file = new File(fileChooser.getSelectedFile().getAbsolutePath() + "/" + currentPlaylist.getName() + ".soe");
+                    try {
+                        if (file.exists()) file.delete();
+                        FileOutputStream fos = new FileOutputStream(file);
+                        ObjectOutputStream oos = new ObjectOutputStream(fos);
+                        oos.writeObject(currentPlaylist);
+                        oos.close();
+                        fos.close();
+                        JOptionPane.showMessageDialog(null, "Successfully saved: " + currentPlaylist.getName());
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null, "Error saving playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             } else if (action == file_exit) {
                 System.exit(0);
             } else if (action == pb_stop) {
@@ -414,23 +435,21 @@ public class Main implements ActionListener {
                 }
             } else if (action == btnStop) {
                 if (currentPlaylist.getPlayedSong() != null) {
-                    if (currentPlaylist.getPlayedSong().isPlaying()) {
-                        currentPlaylist.getPlayedSong().stop();
-                        currentPlaylist.setPlayedSong(null);
-                    }
+                    currentPlaylist.getPlayedSong().stop();
+                    currentPlaylist.setPlayedSong(null);
                 }
             }
         }
 
         currentJTable.getSelectionModel().setSelectionInterval(currentPlaylist.getPlayedSongIndex(), currentPlaylist.getPlayedSongIndex());
         for (int i = 0; i < tableModel.getRowCount(); i++) tableModel.setValueAt(null, i, 0);
-        if (currentPlaylist.getPlayedSong() != null) {
-            if (currentPlaylist.getPlayedSong().isPlaying())
-                tableModel.setValueAt(icnPlay, currentPlaylist.getPlayedSongIndex(), 0);
-            else tableModel.setValueAt(icnPause, currentPlaylist.getPlayedSongIndex(), 0);
-        } else tableModel.setValueAt(null, currentPlaylist.getPlayedSongIndex(), 0);
-
+        if (currentPlaylist.getSongCount() > 0) {
+            if (currentPlaylist.getPlayedSong() != null) {
+                if (currentPlaylist.getPlayedSong().isPlaying())
+                    tableModel.setValueAt(icnPlay, currentPlaylist.getPlayedSongIndex(), 0);
+                else tableModel.setValueAt(icnPause, currentPlaylist.getPlayedSongIndex(), 0);
+            } else tableModel.setValueAt(null, currentPlaylist.getPlayedSongIndex(), 0);
+        }
     }
-
 
 }
