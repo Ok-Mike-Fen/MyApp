@@ -56,7 +56,7 @@ public class Playlist implements Serializable {
     }
 
     public void add(Song song) {
-        songs.add(song);
+        songs.addElement(song);
     }
 
     public Song getSongAt(int index) {

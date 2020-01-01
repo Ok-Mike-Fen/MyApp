@@ -1,15 +1,10 @@
 package mp3.player;
 
+import com.mpatric.mp3agic.ID3v1;
+import com.mpatric.mp3agic.ID3v2;
+import com.mpatric.mp3agic.Mp3File;
 import javazoom.jl.decoder.JavaLayerException;
-import javazoom.jl.player.AudioDevice;
-import javazoom.jl.player.FactoryRegistry;
 import javazoom.jl.player.Player;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
-import org.apache.tika.metadata.XMPDM;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.mp3.Mp3Parser;
-import org.apache.tika.sax.BodyContentHandler;
 
 import java.io.*;
 
@@ -18,6 +13,7 @@ import java.io.*;
  * @author ServantOfEvil
  */
 public class Song implements Serializable {
+
     private boolean isPlaying = false;
     private String artist_album = "";
     private String track_no = "";
@@ -31,30 +27,42 @@ public class Song implements Serializable {
 
     Song(File file) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
-
+        this.path = file.getAbsolutePath();
         try {
-            BodyContentHandler handler = new BodyContentHandler();
-            Metadata metadata = new Metadata();
-
-            FileInputStream input = new FileInputStream(file);
-            this.path = file.getAbsolutePath();
-            ParseContext pContext = new ParseContext();
-
-            Mp3Parser parser = new Mp3Parser();
-
-            parser.parse(input, handler, metadata, pContext);
-            duration = getDurationInString(Double.parseDouble(metadata.get(XMPDM.DURATION)));
-
-            artist_album = metadata.get(XMPDM.ALBUM_ARTIST).concat(" - ").concat(metadata.get(XMPDM.ALBUM));
-            track_no = twoDigitsForm(metadata.get(XMPDM.TRACK_NUMBER));
-            title_trackArtist = metadata.get(TikaCoreProperties.TITLE).concat(" - ").concat(metadata.get(XMPDM.ARTIST));
+            Mp3File mp3File = new Mp3File(file);
+            duration = toMMSSFormat(mp3File.getLengthInSeconds());
+            if (mp3File.hasId3v1Tag()) {
+                ID3v1 id3v1 = mp3File.getId3v1Tag();
+                artist_album = testInfo(id3v1.getArtist()).concat(" - ").concat(testInfo(id3v1.getAlbum()));
+                track_no = twoDigitsForm(id3v1.getTrack());
+                title_trackArtist = testInfo(id3v1.getTitle()).concat(" - ").concat(testInfo(id3v1.getArtist()));
+            } else if (mp3File.hasId3v2Tag()) {
+                ID3v2 id3v2 = mp3File.getId3v2Tag();
+                artist_album = testInfo(id3v2.getAlbumArtist() == null ? id3v2.getArtist() : id3v2.getAlbumArtist()).concat(" - ").concat(testInfo(id3v2.getAlbum()));
+                track_no = twoDigitsForm(id3v2.getTrack());
+                title_trackArtist = testInfo(id3v2.getTitle()).concat(" - ").concat(testInfo(id3v2.getArtist()));
+            }
         } catch (Exception e) {
+            //an exception can be thrown because of non-info files, just ignore it
+            e.printStackTrace();
         }
     }
 
+    private String toMMSSFormat(long lengthInSeconds) {
+        long mm = lengthInSeconds / 60;
+        long ss = lengthInSeconds - mm * 60;
+        return mm + ":" + twoDigitsForm(ss + "");
+    }
+
+    private String testInfo(String info) {
+        if (info == null) return "?";
+        if (info.trim().equals("")) return "?";
+        return info.trim();
+    }
 
     private String twoDigitsForm(String s) {
-        while (s.length() < 2) s = "0" + s;
+        if (s == null)return "";
+        while (s.length() < 2) s = "0".concat(s);
         return s;
     }
 
@@ -62,6 +70,7 @@ public class Song implements Serializable {
         return isPlaying;
     }
 
+/*
     private String getDurationInString(double duration) {
         double d = duration / 60000;
         int minutes = (int) d;
@@ -69,6 +78,7 @@ public class Song implements Serializable {
         return minutes + ":" + twoDigitsForm(seconds + "");
     }
 
+*/
 
     public String getArtist_album() {
         return artist_album;
