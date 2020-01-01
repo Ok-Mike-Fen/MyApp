@@ -1,8 +1,5 @@
 package mp3.player;
 
-import org.apache.commons.lang3.SerializationUtils;
-
-import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.filechooser.FileSystemView;
@@ -17,10 +14,9 @@ import java.util.Vector;
 /**
  * @author ServantOfEvil
  */
-public class Main implements ActionListener, Serializable {
+public class Main implements ActionListener {
 
     private JFrame frame;
-    private JTable table;
 
     private JMenuItem file_open;
     private JMenuItem file_addFiles;
@@ -49,9 +45,8 @@ public class Main implements ActionListener, Serializable {
     private JMenuItem pb_order_rpTrack;
     private JMenuItem pb_order_rpPL;
     private JMenuItem pb_order_random;
-    private JMenuItem pb_order_shuffleTracks;
-    private JMenuItem pb_order_shuffleFolders;
-    private JMenuItem pb_order_shuffleAlbums;
+
+    private ButtonGroup buttonGroupOrder;
 
     private JMenuItem help_about;
 
@@ -112,6 +107,7 @@ public class Main implements ActionListener, Serializable {
         frame.setBounds(100, 100, 900, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setTitle("Simple MP3 Player");
+        frame.setIconImage(new ImageIcon(getClass().getResource("/Icon/icon.png")).getImage());
         playlists = new Vector<>();
 
         JMenuBar menuBar = new JMenuBar();
@@ -205,6 +201,7 @@ public class Main implements ActionListener, Serializable {
 
         pb_order_default = new JRadioButtonMenuItem("Default");
         mnOrder.add(pb_order_default);
+        pb_order_default.setSelected(true);
 
         pb_order_rpPL = new JRadioButtonMenuItem("Repeat (playlist)");
         mnOrder.add(pb_order_rpPL);
@@ -215,14 +212,11 @@ public class Main implements ActionListener, Serializable {
         pb_order_random = new JRadioButtonMenuItem("Random");
         mnOrder.add(pb_order_random);
 
-        pb_order_shuffleTracks = new JRadioButtonMenuItem("Shuffle (tracks)");
-        mnOrder.add(pb_order_shuffleTracks);
-
-        pb_order_shuffleAlbums = new JRadioButtonMenuItem("Shuffle (albums)");
-        mnOrder.add(pb_order_shuffleAlbums);
-
-        pb_order_shuffleFolders = new JRadioButtonMenuItem("Shuffle (folders)");
-        mnOrder.add(pb_order_shuffleFolders);
+        buttonGroupOrder = new ButtonGroup();
+        buttonGroupOrder.add(pb_order_default);
+        buttonGroupOrder.add(pb_order_rpPL);
+        buttonGroupOrder.add(pb_order_rpTrack);
+        buttonGroupOrder.add(pb_order_random);
 
         pb_stopAfterCurrent = new JCheckBoxMenuItem(" Stop after current");
         mnPlayback.add(pb_stopAfterCurrent);
@@ -301,13 +295,13 @@ public class Main implements ActionListener, Serializable {
             if (file.getName().endsWith(".mp3")) playlist.add(new Song(file));
         } else {
             File[] files = file.listFiles();
+            assert files != null;
             for (File file1 : files) findAndAdd(file1, playlist);
         }
     }
 
     private void updatePlaylist(Playlist playlist) {
-        for (int i = 0; i < playlist.getTable().getRowCount(); i++)
-            ((DefaultTableModel) playlist.getTable().getModel()).removeRow(i);
+        ((DefaultTableModel) playlist.getTable().getModel()).setRowCount(0);
         for (int i = 0; i < playlist.getSongCount(); i++) {
             Song song = playlist.getSongAt(i);
             ((DefaultTableModel) playlist.getTable().getModel()).addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
@@ -385,7 +379,7 @@ public class Main implements ActionListener, Serializable {
                         oos.writeObject(currentPlaylist);
                         oos.close();
                         fos.close();
-                        JOptionPane.showMessageDialog(null, "Successfully saved: " + currentPlaylist.getName());
+                        JOptionPane.showMessageDialog(null, "Successfully saved: " + file.getAbsolutePath());
                     } catch (IOException ex) {
                         JOptionPane.showMessageDialog(null, "Error saving playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
@@ -439,6 +433,7 @@ public class Main implements ActionListener, Serializable {
                     currentPlaylist.setPlayedSong(null);
                 }
             }
+
         }
 
         currentJTable.getSelectionModel().setSelectionInterval(currentPlaylist.getPlayedSongIndex(), currentPlaylist.getPlayedSongIndex());
