@@ -17,15 +17,15 @@ import java.io.*;
 /**
  * @author ServantOfEvil
  */
-public class Song {
+public class Song implements Serializable {
     private boolean isPlaying = false;
     private String artist_album = "";
     private String track_no = "";
     private String title_trackArtist;
     private String duration = "00:00";
-    private Player player;
+    private transient Player player;
     private String path;
-    private FileInputStream input;
+    private transient FileInputStream input;
     private int totalLength = 0;
     private int lastPosition = 0;
 
@@ -66,7 +66,7 @@ public class Song {
         double d = duration / 60000;
         int minutes = (int) d;
         int seconds = (int) ((d - minutes) * 6000) / 100;
-        return minutes + ":" + seconds;
+        return minutes + ":" + twoDigitsForm(seconds + "");
     }
 
 
@@ -104,7 +104,7 @@ public class Song {
                 input = new FileInputStream(path);
                 totalLength = input.available();
                 input.skip(totalLength - lastPosition);
-                player = new Player(input);
+                player = new Player(new BufferedInputStream(input));
             } catch (IOException | JavaLayerException e) {
                 e.printStackTrace();
             }
@@ -121,7 +121,7 @@ public class Song {
 
 
     public void stop() {
-        if (isPlaying) player.close();
+        if (isPlaying()) player.close();
         isPlaying = false;
         lastPosition = totalLength;
     }
@@ -130,7 +130,7 @@ public class Song {
     public void play() {
         try {
             input = new FileInputStream(path);
-            player = new Player(input);
+            player = new Player(new BufferedInputStream(input));
             this.totalLength = input.available();
         } catch (Exception e) {
             e.printStackTrace();
@@ -155,5 +155,6 @@ public class Song {
                 ", duration='" + duration + '\'' +
                 '}';
     }
+
 
 }
