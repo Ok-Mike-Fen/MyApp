@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MyApp:jar">
+    <output-path>$PROJECT_DIR$/classes/artifacts/MyApp_jar</output-path>
+    <root id="archive" name="MyApp.jar">
+      <element id="module-output" name="MyApp" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../jlayer-1.0.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

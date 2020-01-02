@@ -7,6 +7,10 @@ import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 
 import java.io.*;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 
 /**
@@ -22,8 +26,10 @@ public class Song implements Serializable {
     private transient Player player;
     private String path;
     private transient FileInputStream input;
-    private int totalLength = 0;
+    private transient BufferedInputStream bufferedInputStream;
+    private int totalLength = 1;
     private int lastPosition = 0;
+    private transient Timer timer;
 
     Song(File file) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
@@ -61,24 +67,15 @@ public class Song implements Serializable {
     }
 
     private String twoDigitsForm(String s) {
-        if (s == null)return "";
+        if (s == null) return "";
+        if (s.trim().equals("")) return "";
         while (s.length() < 2) s = "0".concat(s);
         return s;
     }
 
-    public boolean isPlaying() {
+    public synchronized boolean isPlaying() {
         return isPlaying;
     }
-
-/*
-    private String getDurationInString(double duration) {
-        double d = duration / 60000;
-        int minutes = (int) d;
-        int seconds = (int) ((d - minutes) * 6000) / 100;
-        return minutes + ":" + twoDigitsForm(seconds + "");
-    }
-
-*/
 
     public String getArtist_album() {
         return artist_album;
@@ -101,6 +98,7 @@ public class Song implements Serializable {
             try {
                 lastPosition = input.available();
                 player.close();
+                timer.cancel();
                 isPlaying = false;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -109,23 +107,16 @@ public class Song implements Serializable {
     }
 
     public void resume() {
-        if (!isPlaying) {
+        if (!isPlaying()) {
             try {
                 input = new FileInputStream(path);
                 totalLength = input.available();
                 input.skip(totalLength - lastPosition);
-                player = new Player(new BufferedInputStream(input));
+                player = new Player(bufferedInputStream=new BufferedInputStream(input));
             } catch (IOException | JavaLayerException e) {
                 e.printStackTrace();
             }
-            new Thread(() -> {
-                try {
-                    player.play();
-                } catch (JavaLayerException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            isPlaying = true;
+            beginPlaying();
         }
     }
 
@@ -140,19 +131,12 @@ public class Song implements Serializable {
     public void play() {
         try {
             input = new FileInputStream(path);
-            player = new Player(new BufferedInputStream(input));
+            player = new Player(bufferedInputStream = new BufferedInputStream(input));
             this.totalLength = input.available();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        new Thread(() -> {
-            try {
-                player.play();
-            } catch (JavaLayerException e) {
-                e.printStackTrace();
-            }
-        }).start();
-        isPlaying = true;
+        beginPlaying();
     }
 
     @Override
@@ -166,5 +150,32 @@ public class Song implements Serializable {
                 '}';
     }
 
+
+    private void beginPlaying() {
+        new Thread(() -> {
+            try {
+                player.play();
+                isPlaying = false;
+            } catch (JavaLayerException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        isPlaying = true;
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                while (isPlaying() && Song.this.equals(Main.getBeingPlayedSong())) {
+                    try {
+                        Main.sliderProgress.setValue((int) ((totalLength - bufferedInputStream.available()) * 1f / totalLength * 100));
+                    } catch (Exception e) {
+                        //      e.printStackTrace();
+                        timer.cancel();
+                    }
+                }
+            }
+        }, 0, 1000);
+
+    }
 
 }
