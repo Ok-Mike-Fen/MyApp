@@ -50,6 +50,8 @@ public class Playlist implements Serializable {
                 return super.getColumnClass(columnIndex);
             }
         });
+        table.setSelectionBackground(Color.LIGHT_GRAY);
+        table.setSelectionForeground(Color.RED);
         panel.add(scrollPane, 0);
         table.getColumnModel().getColumn(0).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(205);

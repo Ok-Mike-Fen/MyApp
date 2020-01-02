@@ -2,6 +2,8 @@ package mp3.player;
 
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -57,7 +59,7 @@ public class Main implements ActionListener {
     private JButton btnNext;
     private JButton btnPlayBackRandom;
 
-    private JSlider sliderVolume;
+    public static JSlider sliderProgress;
 
     private Vector<Playlist> playlists;
     private JTabbedPane tabbedPane;
@@ -65,6 +67,8 @@ public class Main implements ActionListener {
     private DefaultTableModel tableModel;
 
     private ImageIcon icnPlay, icnPause;
+
+    private static Song beingPlayedSong;
 
     /**
      * Launch the application.
@@ -96,7 +100,7 @@ public class Main implements ActionListener {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        initialize();
+       initialize();
     }
 
     /**
@@ -108,6 +112,7 @@ public class Main implements ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setTitle("Simple MP3 Player");
         frame.setIconImage(new ImageIcon(getClass().getResource("/Icon/icon.png")).getImage());
+
         playlists = new Vector<>();
 
         JMenuBar menuBar = new JMenuBar();
@@ -258,12 +263,18 @@ public class Main implements ActionListener {
         btnPlayBackRandom.addActionListener(this);
         menuBar.add(btnPlayBackRandom);
 
-        sliderVolume = new JSlider();
-        sliderVolume.setSize(5, 5);
-        sliderVolume.setEnabled(false);
-        menuBar.add(sliderVolume);
+        sliderProgress = new JSlider(0,100,0);
+        sliderProgress.setSize(5, 5);
+        sliderProgress.setEnabled(false);
+        menuBar.add(sliderProgress);
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                beingPlayedSong = playlists.get(tabbedPane.getSelectedIndex()).getPlayedSong();
+            }
+        });
         frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
         initTabs();
         icnPause = new ImageIcon(getClass().getResource("/Icon/pause.png"));
@@ -310,7 +321,6 @@ public class Main implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
         JTable currentJTable = (JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView();
         tableModel = (DefaultTableModel) currentJTable.getModel();
         Playlist currentPlaylist = playlists.elementAt(tabbedPane.getSelectedIndex());
@@ -445,6 +455,10 @@ public class Main implements ActionListener {
                 else tableModel.setValueAt(icnPause, currentPlaylist.getPlayedSongIndex(), 0);
             } else tableModel.setValueAt(null, currentPlaylist.getPlayedSongIndex(), 0);
         }
+        beingPlayedSong = currentPlaylist.getPlayedSong();
     }
 
+    public static Song getBeingPlayedSong() {
+        return beingPlayedSong;
+    }
 }
