@@ -112,7 +112,7 @@ public class Song implements Serializable {
                 input = new FileInputStream(path);
                 totalLength = input.available();
                 input.skip(totalLength - lastPosition);
-                player = new Player(bufferedInputStream=new BufferedInputStream(input));
+                player = new Player(bufferedInputStream = new BufferedInputStream(input));
             } catch (IOException | JavaLayerException e) {
                 e.printStackTrace();
             }
@@ -166,16 +166,21 @@ public class Song implements Serializable {
             @Override
             public void run() {
                 while (isPlaying() && Song.this.equals(Main.getBeingPlayedSong())) {
-                    try {
-                        Main.sliderProgress.setValue((int) ((totalLength - bufferedInputStream.available()) * 1f / totalLength * 100));
-                    } catch (Exception e) {
-                        //      e.printStackTrace();
-                        timer.cancel();
-                    }
+                        Main.sliderProgress.setValue(getProgress());
                 }
             }
         }, 0, 1000);
 
     }
 
+    public int getProgress() {
+        int curPos = lastPosition;
+        try {
+            curPos = bufferedInputStream.available();
+        } catch (Exception e) {
+            //      e.printStackTrace();
+            timer.cancel();
+        }
+        return (int) ((totalLength - curPos) * 1f / totalLength * 100);
+    }
 }
