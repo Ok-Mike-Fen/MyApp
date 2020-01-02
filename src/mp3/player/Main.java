@@ -100,7 +100,7 @@ public class Main implements ActionListener {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-       initialize();
+        initialize();
     }
 
     /**
@@ -263,7 +263,7 @@ public class Main implements ActionListener {
         btnPlayBackRandom.addActionListener(this);
         menuBar.add(btnPlayBackRandom);
 
-        sliderProgress = new JSlider(0,100,0);
+        sliderProgress = new JSlider(0, 100, 0);
         sliderProgress.setSize(5, 5);
         sliderProgress.setEnabled(false);
         menuBar.add(sliderProgress);
@@ -273,6 +273,7 @@ public class Main implements ActionListener {
             @Override
             public void stateChanged(ChangeEvent e) {
                 beingPlayedSong = playlists.get(tabbedPane.getSelectedIndex()).getPlayedSong();
+                if (beingPlayedSong != null) sliderProgress.setValue(beingPlayedSong.getProgress());else sliderProgress.setValue(0);
             }
         });
         frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
@@ -456,6 +457,7 @@ public class Main implements ActionListener {
             } else tableModel.setValueAt(null, currentPlaylist.getPlayedSongIndex(), 0);
         }
         beingPlayedSong = currentPlaylist.getPlayedSong();
+        if (beingPlayedSong != null) sliderProgress.setValue(beingPlayedSong.getProgress());else sliderProgress.setValue(0);
     }
 
     public static Song getBeingPlayedSong() {
