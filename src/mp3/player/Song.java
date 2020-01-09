@@ -6,6 +6,7 @@ import com.mpatric.mp3agic.Mp3File;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 
+import java.awt.event.ActionEvent;
 import java.io.*;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,10 +31,12 @@ public class Song implements Serializable {
     private int totalLength = 1;
     private int lastPosition = 0;
     private transient Timer timer;
+    private Playlist playlist;
 
-    Song(File file) {
+    Song(File file,Playlist playlist) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
         this.path = file.getAbsolutePath();
+        this.playlist = playlist;
         try {
             Mp3File mp3File = new Mp3File(file);
             duration = toMMSSFormat(mp3File.getLengthInSeconds());
@@ -155,6 +158,25 @@ public class Song implements Serializable {
         new Thread(() -> {
             try {
                 player.play();
+
+                    Main.ORDER order = Main.getOrder();
+                    if (order == Main.ORDER.DEFAULT) {
+                            playlist.next();
+                    } else if (order == Main.ORDER.RANDOM) {
+                            playlist.randomPlay();
+                    } else if (order == Main.ORDER.RP_PLAYLIST) {
+                            if (playlist.getPlayedSongIndex() == playlist.getSongCount()-1) {
+                                playlist.play(0);
+                            } else {
+                                playlist.next();
+                            }
+                    } else if (order == Main.ORDER.RP_TRACK) {
+                            playlist.play(playlist.getPlayedSongIndex());
+                    }
+
+                    
+                playlist.getMain().actionPerformed(null);
+
                 isPlaying = false;
             } catch (JavaLayerException e) {
                 e.printStackTrace();

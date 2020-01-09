@@ -18,9 +18,11 @@ public class Playlist implements Serializable {
     private int playedSongIndex = 0;
     private String name;
     private transient JPanel panel;
+    private Main main;
 
-    Playlist(String title) {
+    Playlist(String title,Main thisMain) {
         songs = new Vector<>();
+        main = thisMain;
         name = title;
         initInterface();
     }
@@ -115,6 +117,7 @@ public class Playlist implements Serializable {
         playedSong.play();
     }
 
+
     public void setPlayedSong(Song playedSong) {
         this.playedSong = playedSong;
     }
@@ -130,4 +133,7 @@ public class Playlist implements Serializable {
     public JPanel getPanel() {
         return panel;
     }
+
+    public Main getMain(){return main;}
+
 }
