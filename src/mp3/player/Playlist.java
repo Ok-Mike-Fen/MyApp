@@ -18,11 +18,11 @@ public class Playlist implements Serializable {
     private int playedSongIndex = 0;
     private String name;
     private transient JPanel panel;
-    private Main main;
+    private transient Main main;
 
-    Playlist(String title,Main thisMain) {
+    Playlist(String title, Main main) {
         songs = new Vector<>();
-        main = thisMain;
+        this.main = main;
         name = title;
         initInterface();
     }
@@ -134,6 +134,8 @@ public class Playlist implements Serializable {
         return panel;
     }
 
-    public Main getMain(){return main;}
+    public Main getMain() {
+        return main;
+    }
 
 }

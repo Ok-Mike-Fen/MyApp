@@ -2,8 +2,6 @@ package mp3.player;
 
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -29,10 +27,12 @@ public class Main implements ActionListener {
     private JMenuItem file_exit;
 
     private JMenuItem edit_clear;
-    private JMenuItem edit_selectAll;
-    private JMenuItem edit_selection;
-    private JMenuItem edit_sort;
-    private JMenuItem edit_search;
+    private JMenu edit_sort;
+    private JMenuItem edit_sort_reverse;
+    private JMenuItem edit_sort_byArtist;
+    private JMenuItem edit_sort_byAlbum;
+    private JMenuItem edit_sort_byTitle;
+    private JMenuItem edit_sort_byTrackNum;
     private JMenuItem edit_rmDeadItems;
     private JMenuItem edit_rmDuplicates;
 
@@ -48,8 +48,6 @@ public class Main implements ActionListener {
     private JMenuItem pb_order_rpPL;
     private JMenuItem pb_order_random;
 
-    private ButtonGroup buttonGroupOrder;
-
     private JMenuItem help_about;
 
     private JButton btnPlay;
@@ -64,17 +62,12 @@ public class Main implements ActionListener {
     private Vector<Playlist> playlists;
     private JTabbedPane tabbedPane;
 
-    private DefaultTableModel tableModel;
-
     private ImageIcon icnPlay, icnPause;
 
     private static Song beingPlayedSong;
 
-    public enum ORDER{
-        DEFAULT,RP_PLAYLIST,RP_TRACK,RANDOM;
-    }
+    private ORDER order = ORDER.DEFAULT;
 
-    private static ORDER order = ORDER.DEFAULT;
 
     /**
      * Launch the application.
@@ -111,6 +104,7 @@ public class Main implements ActionListener {
 
     /**
      * Initialize the contents of the frame.
+     * @wbp.parser.entryPoint
      */
     private void initialize() {
         frame = new JFrame();
@@ -161,20 +155,27 @@ public class Main implements ActionListener {
         edit_clear = new JMenuItem("Clear");
         mnNewMenu.add(edit_clear);
 
-        edit_selectAll = new JMenuItem("Select All");
-        mnNewMenu.add(edit_selectAll);
-
-        edit_selection = new JMenuItem("Selection");
-        mnNewMenu.add(edit_selection);
-
-        edit_sort = new JMenuItem("Sort");
+        edit_sort = new JMenu("Sort");
         mnNewMenu.add(edit_sort);
-
-        edit_search = new JMenuItem("Search");
-        mnNewMenu.add(edit_search);
+        
+        edit_sort_reverse = new JMenuItem("Reverse");
+        edit_sort.add(edit_sort_reverse);
+        
+        edit_sort_byArtist = new JMenuItem("By Artist");
+        edit_sort.add(edit_sort_byArtist);
+        
+        edit_sort_byAlbum = new JMenuItem("By Album");
+        edit_sort.add(edit_sort_byAlbum);
+        
+        edit_sort_byTitle = new JMenuItem("By Title");
+        edit_sort.add(edit_sort_byTitle);
+        
+        edit_sort_byTrackNum = new JMenuItem("By Track Number");
+        edit_sort.add(edit_sort_byTrackNum);
 
         edit_rmDuplicates = new JMenuItem("Remove duplicates");
         mnNewMenu.add(edit_rmDuplicates);
+
 
         edit_rmDeadItems = new JMenuItem("Remove dead items");
         mnNewMenu.add(edit_rmDeadItems);
@@ -212,18 +213,22 @@ public class Main implements ActionListener {
 
         pb_order_default = new JRadioButtonMenuItem("Default");
         mnOrder.add(pb_order_default);
+        pb_order_default.addActionListener(this);
         pb_order_default.setSelected(true);
 
         pb_order_rpPL = new JRadioButtonMenuItem("Repeat (playlist)");
         mnOrder.add(pb_order_rpPL);
+        pb_order_rpPL.addActionListener(this);
 
         pb_order_rpTrack = new JRadioButtonMenuItem("Repeat (track)");
         mnOrder.add(pb_order_rpTrack);
+        pb_order_rpTrack.addActionListener(this);
 
         pb_order_random = new JRadioButtonMenuItem("Random");
         mnOrder.add(pb_order_random);
+        pb_order_random.addActionListener(this);
 
-        buttonGroupOrder = new ButtonGroup();
+        ButtonGroup buttonGroupOrder = new ButtonGroup();
         buttonGroupOrder.add(pb_order_default);
         buttonGroupOrder.add(pb_order_rpPL);
         buttonGroupOrder.add(pb_order_rpTrack);
@@ -275,14 +280,12 @@ public class Main implements ActionListener {
         menuBar.add(sliderProgress);
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                beingPlayedSong = playlists.get(tabbedPane.getSelectedIndex()).getPlayedSong();
-                if (beingPlayedSong != null) sliderProgress.setValue(beingPlayedSong.getProgress());else sliderProgress.setValue(0);
-            }
+        tabbedPane.addChangeListener(e -> {
+            beingPlayedSong = playlists.get(tabbedPane.getSelectedIndex()).getPlayedSong();
+            if (beingPlayedSong != null) sliderProgress.setValue(beingPlayedSong.getProgress());
+            else sliderProgress.setValue(0);
         });
-        frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        frame.getContentPane().add(tabbedPane, BorderLayout.NORTH);
         initTabs();
         icnPause = new ImageIcon(getClass().getResource("/Icon/pause.png"));
         icnPlay = new ImageIcon(getClass().getResource("/Icon/play.png"));
@@ -291,13 +294,13 @@ public class Main implements ActionListener {
     private void addTab(String title) {
         title = title.trim().equals("") ? "New Playlist " + tabbedPane.getTabCount() : title;
         Playlist playlist;
-        playlists.add(playlist = new Playlist(title,this));
+        playlists.add(playlist = new Playlist(title, this));
         tabbedPane.addTab(playlist.getName(), null, playlist.getPanel(), null);
     }
 
     private void addTab(Playlist p) {
         Playlist playlist;
-        playlists.add(playlist = new Playlist(p.getName(),this));
+        playlists.add(playlist = new Playlist(p.getName(), this));
         tabbedPane.addTab(playlist.getName(), null, playlist.getPanel(), null);
         playlist.setSongs(p.getSongs());
         updatePlaylist(playlist);
@@ -308,9 +311,8 @@ public class Main implements ActionListener {
     }
 
     private void findAndAdd(File file, Playlist playlist) {
-//        System.out.println(file.getName());
         if (!file.isDirectory()) {
-            if (file.getName().endsWith(".mp3")) playlist.add(new Song(file,playlist));
+            if (file.getName().endsWith(".mp3")) playlist.add(new Song(file, playlist));
         } else {
             File[] files = file.listFiles();
             assert files != null;
@@ -329,140 +331,138 @@ public class Main implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         JTable currentJTable = (JTable) ((JScrollPane) ((JPanel) tabbedPane.getComponentAt(tabbedPane.getSelectedIndex())).getComponent(0)).getViewport().getView();
-        tableModel = (DefaultTableModel) currentJTable.getModel();
+        DefaultTableModel tableModel = (DefaultTableModel) currentJTable.getModel();
         Playlist currentPlaylist = playlists.elementAt(tabbedPane.getSelectedIndex());
         int index = currentJTable.getSelectedRow();
-     if(e!=null) {
-         if (e.getSource() instanceof JMenuItem) {
-             JMenuItem action = (JMenuItem) e.getSource();
-             if (e != null) {
-                 if (action == file_open) {
-                     JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                     fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                     if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
-                         Song song = new Song(fileChooser.getSelectedFile(), currentPlaylist);
-                         currentPlaylist.add(song);
-                         tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
-                     }
-                 } else if (action == file_addFiles) {
-                     JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                     fileChooser.setMultiSelectionEnabled(true);
-                     fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                     if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                         File[] files = fileChooser.getSelectedFiles();
-                         for (File file : files) {
-                             Song song = new Song(file, currentPlaylist);
-                             currentPlaylist.add(song);
-                             tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
-                         }
-                     }
-                 } else if (action == file_addFolder) {
-                     JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                     fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                     if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                         File file = fileChooser.getSelectedFile();
-                         findAndAdd(file, currentPlaylist);
-                         updatePlaylist(currentPlaylist);
-                     }
-                 } else if (action == file_newPlaylist) {
-                     addTab(JOptionPane.showInputDialog("Enter the Playlist name:"));
-                 } else if (action == file_loadPlaylist) {
-                     JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                     fileChooser.setMultiSelectionEnabled(true);
-                     fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                     if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
-                         File file = fileChooser.getSelectedFile();
-                         if (!file.getName().endsWith(".soe")) return;
-                         try {
-                             FileInputStream fis = new FileInputStream(file);
-                             ObjectInputStream ois = new ObjectInputStream(fis);
-                             Playlist p = (Playlist) ois.readObject();
-                             addTab(p);
-                             ois.close();
-                             fis.close();
-                         } catch (Exception e1) {
-                             JOptionPane.showMessageDialog(null, "Error loading playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
-                         }
-                     }
-                 } else if (action == file_savePlaylist) {
-                     JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-                     fileChooser.setMultiSelectionEnabled(true);
-                     fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                     if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
-                         File file = new File(fileChooser.getSelectedFile().getAbsolutePath() + "/" + currentPlaylist.getName() + ".soe");
-                         try {
-                             if (file.exists()) file.delete();
-                             FileOutputStream fos = new FileOutputStream(file);
-                             ObjectOutputStream oos = new ObjectOutputStream(fos);
-                             oos.writeObject(currentPlaylist);
-                             oos.close();
-                             fos.close();
-                             JOptionPane.showMessageDialog(null, "Successfully saved: " + file.getAbsolutePath());
-                         } catch (IOException ex) {
-                             JOptionPane.showMessageDialog(null, "Error saving playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
-                         }
+        if (e != null) {
+            if (e.getSource() instanceof JMenuItem) {
+                JMenuItem action = (JMenuItem) e.getSource();
+                if (action == file_open) {
+                    JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                    if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                        Song song = new Song(fileChooser.getSelectedFile(), currentPlaylist);
+                        currentPlaylist.add(song);
+                        tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
+                    }
+                } else if (action == file_addFiles) {
+                    JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                    fileChooser.setMultiSelectionEnabled(true);
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                    if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                        File[] files = fileChooser.getSelectedFiles();
+                        for (File file : files) {
+                            Song song = new Song(file, currentPlaylist);
+                            currentPlaylist.add(song);
+                            tableModel.addRow(new Object[]{null, song.getArtist_album(), song.getTrack_no(), song.getTitle_trackArtist(), song.getDuration(), null});
+                        }
+                    }
+                } else if (action == file_addFolder) {
+                    JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                    if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                        File file = fileChooser.getSelectedFile();
+                        findAndAdd(file, currentPlaylist);
+                        updatePlaylist(currentPlaylist);
+                    }
+                } else if (action == file_newPlaylist) {
+                    addTab(JOptionPane.showInputDialog("Enter the Playlist name:"));
+                } else if (action == file_loadPlaylist) {
+                    JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                    fileChooser.setMultiSelectionEnabled(true);
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                    if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                        File file = fileChooser.getSelectedFile();
+                        if (!file.getName().endsWith(".soe")) return;
+                        try {
+                            FileInputStream fis = new FileInputStream(file);
+                            ObjectInputStream ois = new ObjectInputStream(fis);
+                            Playlist p = (Playlist) ois.readObject();
+                            addTab(p);
+                            ois.close();
+                            fis.close();
+                        } catch (Exception e1) {
+                            JOptionPane.showMessageDialog(null, "Error loading playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else if (action == file_savePlaylist) {
+                    JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                    fileChooser.setMultiSelectionEnabled(true);
+                    fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                    if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                        File file = new File(fileChooser.getSelectedFile().getAbsolutePath() + "/" + currentPlaylist.getName() + ".soe");
+                        try {
+                            if (file.exists()) file.delete();
+                            FileOutputStream fos = new FileOutputStream(file);
+                            ObjectOutputStream oos = new ObjectOutputStream(fos);
+                            oos.writeObject(currentPlaylist);
+                            oos.close();
+                            fos.close();
+                            JOptionPane.showMessageDialog(null, "Successfully saved: " + file.getAbsolutePath());
+                        } catch (IOException ex) {
+                            JOptionPane.showMessageDialog(null, "Error saving playlist: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
 
-                     }
-                 } else if (action == file_exit) {
-                     System.exit(0);
-                 } else if (action == pb_stop) {
-                     e.setSource(btnStop);
-                     actionPerformed(e);
-                 } else if (action == pb_play) {
-                     e.setSource(btnPlay);
-                     actionPerformed(e);
-                 } else if (action == pb_pause) {
-                     e.setSource(btnPause);
-                     actionPerformed(e);
-                 } else if (action == pb_prev) {
-                     e.setSource(btnPrev);
-                     actionPerformed(e);
-                 } else if (action == pb_next) {
-                     e.setSource(btnNext);
-                     actionPerformed(e);
-                 } else if (action == pb_random) {
-                     e.setSource(btnPlayBackRandom);
-                     actionPerformed(e);
-                 } else if (action == help_about) {
-                     JOptionPane.showMessageDialog(frame, "---Simple MP3 Player---\n Developed by:\n Đặng Quang Vinh(ServantOfEvil)\n Ngô Quang Vinh\n Nguyễn Công Hậu", "About", JOptionPane.INFORMATION_MESSAGE);
-                 } else if (action == pb_order_default) {
-                     order = ORDER.DEFAULT;
-                 } else if (action == pb_order_rpPL) {
-                     order = ORDER.RP_PLAYLIST;
-                 } else if (action == pb_order_rpTrack) {
-                     order = ORDER.RP_TRACK;
-                 } else if (action == pb_order_random) {
-                     order = ORDER.RANDOM;
-                 }
-             }
-         } else if (e.getSource() instanceof JButton) {
-             JButton action = (JButton) e.getSource();
+                    }
+                } else if (action == file_exit) {
+                    System.exit(0);
+                } else if (action == pb_stop) {
+                    e.setSource(btnStop);
+                    actionPerformed(e);
+                } else if (action == pb_play) {
+                    e.setSource(btnPlay);
+                    actionPerformed(e);
+                } else if (action == pb_pause) {
+                    e.setSource(btnPause);
+                    actionPerformed(e);
+                } else if (action == pb_prev) {
+                    e.setSource(btnPrev);
+                    actionPerformed(e);
+                } else if (action == pb_next) {
+                    e.setSource(btnNext);
+                    actionPerformed(e);
+                } else if (action == pb_random) {
+                    e.setSource(btnPlayBackRandom);
+                    actionPerformed(e);
+                } else if (action == help_about) {
+                    JOptionPane.showMessageDialog(frame, "---Simple MP3 Player---\n Developed by:\n Đặng Quang Vinh(ServantOfEvil)\n Ngô Quang Vinh\n Nguyễn Công Hậu", "About", JOptionPane.INFORMATION_MESSAGE);
+                } else if (action == pb_order_default) {
+                    order = ORDER.DEFAULT;
+                } else if (action == pb_order_rpPL) {
+                    order = ORDER.RP_PLAYLIST;
+                } else if (action == pb_order_rpTrack) {
+                    order = ORDER.RP_TRACK;
+                } else if (action == pb_order_random) {
+                    order = ORDER.RANDOM;
+                }
+            } else if (e.getSource() instanceof JButton) {
+                JButton action = (JButton) e.getSource();
 
-             if (action == btnPlay) {
-                 currentPlaylist.play(index);
-             } else if (action == btnNext) {
-                 currentPlaylist.next();
-             } else if (action == btnPrev) {
-                 currentPlaylist.prev();
-             } else if (action == btnPlayBackRandom) {
-                 currentPlaylist.randomPlay();
-             } else if (action == btnPause) {
-                 if (currentPlaylist.getPlayedSong() != null) {
-                     if (currentPlaylist.getPlayedSong().isPlaying()) {
-                         currentPlaylist.getPlayedSong().pause();
-                     } else {
-                         currentPlaylist.getPlayedSong().resume();
-                     }
-                 }
-             } else if (action == btnStop) {
-                 if (currentPlaylist.getPlayedSong() != null) {
-                     currentPlaylist.getPlayedSong().stop();
-                     currentPlaylist.setPlayedSong(null);
-                 }
-             }
+                if (action == btnPlay) {
+                    currentPlaylist.play(index);
+                } else if (action == btnNext) {
+                    currentPlaylist.next();
+                } else if (action == btnPrev) {
+                    currentPlaylist.prev();
+                } else if (action == btnPlayBackRandom) {
+                    currentPlaylist.randomPlay();
+                } else if (action == btnPause) {
+                    if (currentPlaylist.getPlayedSong() != null) {
+                        if (currentPlaylist.getPlayedSong().isPlaying()) {
+                            currentPlaylist.getPlayedSong().pause();
+                        } else {
+                            currentPlaylist.getPlayedSong().resume();
+                        }
+                    }
+                } else if (action == btnStop) {
+                    if (currentPlaylist.getPlayedSong() != null) {
+                        currentPlaylist.getPlayedSong().stop();
+                        currentPlaylist.setPlayedSong(null);
+                    }
+                }
 
-         }
-     }
+            }
+        }
 
         currentJTable.getSelectionModel().setSelectionInterval(currentPlaylist.getPlayedSongIndex(), currentPlaylist.getPlayedSongIndex());
         for (int i = 0; i < tableModel.getRowCount(); i++) tableModel.setValueAt(null, i, 0);
@@ -474,12 +474,23 @@ public class Main implements ActionListener {
             } else tableModel.setValueAt(null, currentPlaylist.getPlayedSongIndex(), 0);
         }
         beingPlayedSong = currentPlaylist.getPlayedSong();
-        if (beingPlayedSong != null) sliderProgress.setValue(beingPlayedSong.getProgress());else sliderProgress.setValue(0);
+        if (beingPlayedSong != null) sliderProgress.setValue(beingPlayedSong.getProgress());
+        else sliderProgress.setValue(0);
     }
 
     public static Song getBeingPlayedSong() {
         return beingPlayedSong;
     }
 
-    public static ORDER getOrder(){return order;}
+    public ORDER getOrder() {
+        return order;
+    }
+
+    public boolean stopAfterCurrent() {
+        return pb_stopAfterCurrent.isSelected();
+    }
+}
+
+enum ORDER {
+    DEFAULT, RP_PLAYLIST, RP_TRACK, RANDOM
 }

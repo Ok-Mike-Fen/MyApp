@@ -6,12 +6,9 @@ import com.mpatric.mp3agic.Mp3File;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 
-import java.awt.event.ActionEvent;
 import java.io.*;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 
 
 /**
@@ -31,9 +28,9 @@ public class Song implements Serializable {
     private int totalLength = 1;
     private int lastPosition = 0;
     private transient Timer timer;
-    private Playlist playlist;
+    private transient Playlist playlist;
 
-    Song(File file,Playlist playlist) {
+    Song(File file, Playlist playlist) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
         this.path = file.getAbsolutePath();
         this.playlist = playlist;
@@ -51,6 +48,7 @@ public class Song implements Serializable {
                 track_no = twoDigitsForm(id3v2.getTrack());
                 title_trackArtist = testInfo(id3v2.getTitle()).concat(" - ").concat(testInfo(id3v2.getArtist()));
             }
+
         } catch (Exception e) {
             //an exception can be thrown because of non-info files, just ignore it
             e.printStackTrace();
@@ -158,26 +156,33 @@ public class Song implements Serializable {
         new Thread(() -> {
             try {
                 player.play();
-
-                    Main.ORDER order = Main.getOrder();
-                    if (order == Main.ORDER.DEFAULT) {
-                            playlist.next();
-                    } else if (order == Main.ORDER.RANDOM) {
-                            playlist.randomPlay();
-                    } else if (order == Main.ORDER.RP_PLAYLIST) {
-                            if (playlist.getPlayedSongIndex() == playlist.getSongCount()-1) {
-                                playlist.play(0);
-                            } else {
-                                playlist.next();
-                            }
-                    } else if (order == Main.ORDER.RP_TRACK) {
-                            playlist.play(playlist.getPlayedSongIndex());
-                    }
-
-                    
-                playlist.getMain().actionPerformed(null);
-
                 isPlaying = false;
+                if (player.isComplete()) {
+                    if (!playlist.getMain().stopAfterCurrent()) {
+                        ORDER order = playlist.getMain().getOrder();
+                        switch (order) {
+                            case DEFAULT:
+                                playlist.next();
+                                break;
+                            case RANDOM:
+                                playlist.randomPlay();
+                                break;
+                            case RP_TRACK:
+                                playlist.play(playlist.getPlayedSongIndex());
+                                break;
+                            case RP_PLAYLIST:
+                                if (playlist.getPlayedSongIndex() == playlist.getSongCount() - 1) {
+                                    playlist.play(0);
+                                } else {
+                                    playlist.next();
+                                }
+                                break;
+                        }
+                    } else playlist.setPlayedSong(null);
+
+                }
+
+                playlist.getMain().actionPerformed(null);
             } catch (JavaLayerException e) {
                 e.printStackTrace();
             }
@@ -188,7 +193,7 @@ public class Song implements Serializable {
             @Override
             public void run() {
                 while (isPlaying() && Song.this.equals(Main.getBeingPlayedSong())) {
-                        Main.sliderProgress.setValue(getProgress());
+                    Main.sliderProgress.setValue(getProgress());
                 }
             }
         }, 0, 1000);
@@ -200,7 +205,6 @@ public class Song implements Serializable {
         try {
             curPos = bufferedInputStream.available();
         } catch (Exception e) {
-            //      e.printStackTrace();
             timer.cancel();
         }
         return (int) ((totalLength - curPos) * 1f / totalLength * 100);
