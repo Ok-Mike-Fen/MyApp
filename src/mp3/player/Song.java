@@ -28,7 +28,7 @@ public class Song implements Serializable {
     private int totalLength = 1;
     private int lastPosition = 0;
     private transient Timer timer;
-    private transient Playlist playlist;
+    private Playlist playlist;
 
     Song(File file, Playlist playlist) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
@@ -181,7 +181,6 @@ public class Song implements Serializable {
                     } else playlist.setPlayedSong(null);
 
                 }
-
                 playlist.getMain().actionPerformed(null);
             } catch (JavaLayerException e) {
                 e.printStackTrace();
@@ -208,5 +207,9 @@ public class Song implements Serializable {
             timer.cancel();
         }
         return (int) ((totalLength - curPos) * 1f / totalLength * 100);
+    }
+
+    public void setPlaylist(Playlist playlist) {
+        this.playlist = playlist;
     }
 }

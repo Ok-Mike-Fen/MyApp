@@ -73,6 +73,7 @@ public class Playlist implements Serializable {
 
     public void setSongs(Vector<Song> songs) {
         this.songs = songs;
+        for (Song song : songs) song.setPlaylist(this);
     }
 
     public JTable getTable() {
