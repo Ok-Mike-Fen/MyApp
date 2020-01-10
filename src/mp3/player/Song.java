@@ -7,6 +7,7 @@ import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 
 import java.io.*;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -29,6 +30,9 @@ public class Song implements Serializable {
     private int lastPosition = 0;
     private transient Timer timer;
     private Playlist playlist;
+    private String artist;
+    private String title;
+    private String album;
 
     Song(File file, Playlist playlist) {
         title_trackArtist = file.getName().substring(0, file.getName().lastIndexOf(".")) + " - Unknown";
@@ -39,14 +43,14 @@ public class Song implements Serializable {
             duration = toMMSSFormat(mp3File.getLengthInSeconds());
             if (mp3File.hasId3v1Tag()) {
                 ID3v1 id3v1 = mp3File.getId3v1Tag();
-                artist_album = testInfo(id3v1.getArtist()).concat(" - ").concat(testInfo(id3v1.getAlbum()));
+                artist_album = (artist = testInfo(id3v1.getArtist())).concat(" - ").concat(album = testInfo(id3v1.getAlbum()));
                 track_no = twoDigitsForm(id3v1.getTrack());
-                title_trackArtist = testInfo(id3v1.getTitle()).concat(" - ").concat(testInfo(id3v1.getArtist()));
+                title_trackArtist = (title = testInfo(id3v1.getTitle())).concat(" - ").concat(testInfo(id3v1.getArtist()));
             } else if (mp3File.hasId3v2Tag()) {
                 ID3v2 id3v2 = mp3File.getId3v2Tag();
-                artist_album = testInfo(id3v2.getAlbumArtist() == null ? id3v2.getArtist() : id3v2.getAlbumArtist()).concat(" - ").concat(testInfo(id3v2.getAlbum()));
+                artist_album = (artist = testInfo(id3v2.getAlbumArtist() == null ? id3v2.getArtist() : id3v2.getAlbumArtist())).concat(" - ").concat(album = testInfo(id3v2.getAlbum()));
                 track_no = twoDigitsForm(id3v2.getTrack());
-                title_trackArtist = testInfo(id3v2.getTitle()).concat(" - ").concat(testInfo(id3v2.getArtist()));
+                title_trackArtist = (title = testInfo(id3v2.getTitle())).concat(" - ").concat(testInfo(id3v2.getArtist()));
             }
 
         } catch (Exception e) {
@@ -212,4 +216,45 @@ public class Song implements Serializable {
     public void setPlaylist(Playlist playlist) {
         this.playlist = playlist;
     }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public String getAlbum() {
+        return album;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Song song = (Song) o;
+        return Objects.equals(artist_album, song.artist_album) &&
+                Objects.equals(track_no, song.track_no) &&
+                Objects.equals(title_trackArtist, song.title_trackArtist) &&
+                Objects.equals(duration, song.duration) &&
+                Objects.equals(path, song.path) &&
+                Objects.equals(artist, song.artist) &&
+                Objects.equals(title, song.title) &&
+                Objects.equals(album, song.album);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isPlaying, artist_album, track_no, title_trackArtist, duration, player, path, input, bufferedInputStream, totalLength, lastPosition, timer, playlist, artist, title, album);
+    }
+
 }

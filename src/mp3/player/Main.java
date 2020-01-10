@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.util.Collections;
 import java.util.Vector;
 
 
@@ -27,7 +28,6 @@ public class Main implements ActionListener {
     private JMenuItem file_exit;
 
     private JMenuItem edit_clear;
-    private JMenu edit_sort;
     private JMenuItem edit_sort_reverse;
     private JMenuItem edit_sort_byArtist;
     private JMenuItem edit_sort_byAlbum;
@@ -104,7 +104,6 @@ public class Main implements ActionListener {
 
     /**
      * Initialize the contents of the frame.
-     * @wbp.parser.entryPoint
      */
     private void initialize() {
         frame = new JFrame();
@@ -154,32 +153,38 @@ public class Main implements ActionListener {
 
         edit_clear = new JMenuItem("Clear");
         mnNewMenu.add(edit_clear);
+        edit_clear.addActionListener(this);
 
-        edit_sort = new JMenu("Sort");
+        JMenu edit_sort = new JMenu("Sort");
         mnNewMenu.add(edit_sort);
-        
+
         edit_sort_reverse = new JMenuItem("Reverse");
         edit_sort.add(edit_sort_reverse);
-        
+        edit_sort_reverse.addActionListener(this);
+
         edit_sort_byArtist = new JMenuItem("By Artist");
         edit_sort.add(edit_sort_byArtist);
-        
+        edit_sort_byArtist.addActionListener(this);
+
         edit_sort_byAlbum = new JMenuItem("By Album");
         edit_sort.add(edit_sort_byAlbum);
-        
+        edit_sort_byAlbum.addActionListener(this);
+
         edit_sort_byTitle = new JMenuItem("By Title");
         edit_sort.add(edit_sort_byTitle);
-        
+        edit_sort_byTitle.addActionListener(this);
+
         edit_sort_byTrackNum = new JMenuItem("By Track Number");
         edit_sort.add(edit_sort_byTrackNum);
+        edit_sort_byTrackNum.addActionListener(this);
 
         edit_rmDuplicates = new JMenuItem("Remove duplicates");
         mnNewMenu.add(edit_rmDuplicates);
-
+        edit_rmDuplicates.addActionListener(this);
 
         edit_rmDeadItems = new JMenuItem("Remove dead items");
         mnNewMenu.add(edit_rmDeadItems);
-
+        edit_rmDeadItems.addActionListener(this);
 
         JMenu mnPlayback = new JMenu("Playback");
         menuBar.add(mnPlayback);
@@ -434,6 +439,39 @@ public class Main implements ActionListener {
                     order = ORDER.RP_TRACK;
                 } else if (action == pb_order_random) {
                     order = ORDER.RANDOM;
+                } else if (action == edit_clear) {
+                    e.setSource(btnStop);
+                    actionPerformed(e);
+                    currentPlaylist.getSongs().removeAllElements();
+                    updatePlaylist(currentPlaylist);
+                } else if (action == edit_sort_byArtist) {
+                    currentPlaylist.getSongs().sort(new Sort(Type.BY_ARTIST));
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
+                } else if (action == edit_sort_byAlbum) {
+                    currentPlaylist.getSongs().sort(new Sort(Type.BY_ALBUM));
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
+                } else if (action == edit_sort_byTitle) {
+                    currentPlaylist.getSongs().sort(new Sort(Type.BY_TITLE));
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
+                } else if (action == edit_sort_byTrackNum) {
+                    currentPlaylist.getSongs().sort(new Sort(Type.BY_TRACK_NUM));
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
+                } else if (action == edit_sort_reverse) {
+                    Collections.reverse(currentPlaylist.getSongs());
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
+                } else if (action == edit_rmDuplicates) {
+                    currentPlaylist.removeDuplicates();
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
+                } else if (action == edit_rmDeadItems) {
+                    currentPlaylist.removeDeadItems();
+                    updatePlaylist(currentPlaylist);
+                    currentPlaylist.updatePlayedSongIndex();
                 }
             } else if (e.getSource() instanceof JButton) {
                 JButton action = (JButton) e.getSource();

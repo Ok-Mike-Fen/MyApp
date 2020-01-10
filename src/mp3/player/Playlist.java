@@ -4,6 +4,7 @@ package mp3.player;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
 import java.io.Serializable;
 import java.util.Random;
 import java.util.Vector;
@@ -135,8 +136,28 @@ public class Playlist implements Serializable {
         return panel;
     }
 
+
     public Main getMain() {
         return main;
     }
 
+    public void updatePlayedSongIndex() {
+        playedSongIndex = songs.indexOf(playedSong);
+    }
+
+    public void removeDuplicates() {
+        Vector<Song> songs1 = new Vector<>();
+        for (Song song : songs) if (!songs1.contains(song)) songs1.addElement(song);
+        this.songs = songs1;
+    }
+
+    public void removeDeadItems() {
+        if (getSongCount() < 1) return;
+        File checker;
+        for (int i = 0; i < getSongCount(); i++) {
+            checker = new File(songs.elementAt(i).getPath());
+            if (!checker.exists()) songs.elementAt(i).setPath("");
+        }
+        for (int i = 0; i < getSongCount(); i++) if (songs.elementAt(i).getPath().equals("")) songs.removeElementAt(i);
+    }
 }
