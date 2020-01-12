@@ -142,7 +142,7 @@ public class Playlist implements Serializable {
     }
 
     public void updatePlayedSongIndex() {
-        playedSongIndex = songs.indexOf(playedSong);
+        playedSongIndex = (songs.indexOf(playedSong) == -1 ? 0 : songs.indexOf(playedSong));
     }
 
     public void removeDuplicates() {

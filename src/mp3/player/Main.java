@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.Utilities;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,6 +24,7 @@ public class Main implements ActionListener {
     private JMenuItem file_open;
     private JMenuItem file_addFiles;
     private JMenuItem file_addFolder;
+    private JMenuItem file_close_playlist;
     private JMenuItem file_newPlaylist;
     private JMenuItem file_loadPlaylist;
     private JMenuItem file_savePlaylist;
@@ -104,6 +107,7 @@ public class Main implements ActionListener {
 
     /**
      * Initialize the contents of the frame.
+     * @wbp.parser.entryPoint
      */
     private void initialize() {
         frame = new JFrame();
@@ -131,6 +135,10 @@ public class Main implements ActionListener {
         file_addFolder = new JMenuItem("Add folder...");
         mnFile.add(file_addFolder);
         file_addFolder.addActionListener(this);
+        
+        file_close_playlist = new JMenuItem("Close playlist");
+       // mnFile.add(file_close_playlist);
+        //file_close_playlist.addActionListener(this);
 
         file_newPlaylist = new JMenuItem("New playlist");
         mnFile.add(file_newPlaylist);
@@ -370,7 +378,9 @@ public class Main implements ActionListener {
                         findAndAdd(file, currentPlaylist);
                         updatePlaylist(currentPlaylist);
                     }
-                } else if (action == file_newPlaylist) {
+                } else if(action == file_close_playlist) {
+                }
+                	else if (action == file_newPlaylist) {
                     addTab(JOptionPane.showInputDialog("Enter the Playlist name:"));
                 } else if (action == file_loadPlaylist) {
                     JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
